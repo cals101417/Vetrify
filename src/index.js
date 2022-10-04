@@ -3,9 +3,6 @@ import ReactDOM from "react-dom/client";
 import "./index.css";
 import App from "./App";
 import reportWebVitals from "./reportWebVitals";
-import "./assets/js/codebase.app.min.js";
-import "./assets/js/codebase.core.min.js";
-import "jquery";
 
 const root = ReactDOM.createRoot(document.getElementById("root"));
 root.render(
