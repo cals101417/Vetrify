@@ -19,7 +19,6 @@ function Login() {
       navigate("/Home");
     } catch (error) {
       alert(error);
-      // window.location.reload(true);
     }
   }
 
