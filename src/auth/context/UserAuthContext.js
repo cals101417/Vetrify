@@ -5,7 +5,8 @@ import {
   signOut,
   onAuthStateChanged,
 } from "firebase/auth";
-import { auth } from "../firebase";
+import { auth, db } from "../firebase";
+import { doc, updateDoc } from "firebase/firestore";
 
 const userAuthContext = createContext();
 
@@ -27,11 +28,21 @@ export function AuthProvider({ children }) {
     return createUserWithEmailAndPassword(auth, email, password);
   };
 
-  const login = (email, password) => {
-    return signInWithEmailAndPassword(auth, email, password);
+  const login = async (email, password) => {
+    const usersuid = await signInWithEmailAndPassword(auth, email, password);
+    await updateDoc(doc(db, "users", usersuid.user.uid), {
+      online: true,
+    });
+
+    return usersuid.user;
   };
 
-  const logout = () => signOut(auth);
+  const logout = async () => {
+    await signOut(auth);
+    await updateDoc(doc(db, "users", user.uid), {
+      online: false,
+    });
+  };
 
   useEffect(() => {
     const unsubuscribe = onAuthStateChanged(auth, (currentUser) => {

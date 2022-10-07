@@ -1,12 +1,13 @@
 import logo from "./logo.svg";
 import "./App.css";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
-import Home from "./pages/Home";
-import Login from "./components/Login";
-import Register from "./components/Register";
 import { AuthProvider } from "./auth/context/UserAuthContext";
 import Unprotected_route from "../src/auth/context/Unprotected_route";
 import Protected_route from "../src/auth/context/Protected_route";
+import Login from "./components/Login";
+import Register from "./components/Register";
+import Home from "./pages/Home";
+import User from "./pages/User";
 function App() {
   return (
     <BrowserRouter>
@@ -36,6 +37,15 @@ function App() {
             element={
               <Protected_route>
                 <Home />
+              </Protected_route>
+            }
+          />
+          <Route
+            path="/Users"
+            exact
+            element={
+              <Protected_route>
+                <User />
               </Protected_route>
             }
           />

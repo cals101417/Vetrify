@@ -58,7 +58,7 @@ function Sidebar(props) {
                     <Link to="/Home"><i className="fa fa-dashboard mt-0.5"></i><span className="sidebar-mini-hide">Dashboard</span></Link>
                 </li>
                 <li>
-                    <Link to="/Home"><i className="si si-puzzle mt-0.5"></i><span className="sidebar-mini-hide">Users</span></Link>
+                    <Link to="/Users"><i className="si si-puzzle mt-0.5"></i><span className="sidebar-mini-hide">Users</span></Link>
                 </li>
                 <li>
                     <Link to="/Home"><i className="si si-calendar mt-0.5"></i><span className="sidebar-mini-hide">Appointments</span></Link>
