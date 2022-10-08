@@ -6,7 +6,7 @@ import {
 	onAuthStateChanged,
 } from "firebase/auth";
 import { auth, db } from "../firebase";
-import { doc, getDoc, updateDoc } from "firebase/firestore";
+import { collection, doc, getDoc, getDocs, query, updateDoc, where } from "firebase/firestore";
 
 const userAuthContext = createContext();
 
@@ -33,6 +33,11 @@ export function AuthProvider ({ children }) {
 	};
 
 	const login = async (email, password) => {
+		const userQuery = query(collection(db, "users"), where("email", "==", email));
+		const snapshot = await getDocs(userQuery);
+		const isAdmin = snapshot.docs.some((d) => d.data().role === "admin");
+		if (!isAdmin) return;
+
 		const usersuid = await signInWithEmailAndPassword(auth, email, password);
 		await updateDoc(doc(db, "users", usersuid.user.uid), {
 			online: true,
@@ -49,19 +54,23 @@ export function AuthProvider ({ children }) {
 
 	useEffect(() => {
 		const unsubuscribe = onAuthStateChanged(auth, async (currentUser) => {
-			getDoc(doc(db, "users", currentUser.uid)).then((doc) => {
-				if (doc.exists()) {
-					setUser({
-						...doc.data(),
-						createdAt: doc.data().createdAt.toDate(),
-						uid: currentUser.uid
-					});
-				}
-				setLoading(false);
-			}).catch((err) => {
-				console.error(err);
-				setLoading(false);
-			});
+			if (currentUser) {
+				getDoc(doc(db, "users", currentUser.uid)).then((doc) => {
+					if (doc.exists()) {
+						setUser({
+							...doc.data(),
+							createdAt: doc.data().createdAt.toDate(),
+							uid: currentUser.uid
+						});
+					}
+					setLoading(false);
+				}).catch((err) => {
+					console.error(err);
+					setLoading(false);
+				});
+			} else {
+				setUser(null);
+			}
 		});
 		return () => unsubuscribe();
 	}, []);

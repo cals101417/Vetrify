@@ -19,11 +19,12 @@ function User () {
 	const handleClick = async (id) => {
 		setLoadingPets(true)
 		const petCollectionRef = collection(db, "pets");
-		const q = qry(petCollectionRef, where("ownerId", "==", id));
+		const q = query(petCollectionRef, where("ownerId", "==", id));
 		const pets = await getDocs(q);
 		setSelectedpets(pets.docs);
 		setLoadingPets(false);
 	};
+
 	return (
 		<div
 			id="page-container"

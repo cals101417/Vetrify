@@ -46,7 +46,7 @@ function Sidebar () {
 							<img className="img-avatar" src={user.photoURL || noUserImg} />
 						</a>
 						<ul className="list-inline mt-10">
-							<li class="list-inline-item">
+							<li className="list-inline-item">
 								<Link to='profile' className="link-effect text-white font-size-xs font-w600 text-uppercase">{user.firstname} {user.lastname}</Link>
 							</li>
 							<li className="list-inline-item">
