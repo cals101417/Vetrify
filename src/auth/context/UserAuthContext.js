@@ -6,7 +6,7 @@ import {
 	onAuthStateChanged,
 } from "firebase/auth";
 import { auth, db } from "../firebase";
-import { collection, doc, getDoc, getDocs, query, updateDoc, where } from "firebase/firestore";
+import { collection, doc, getDoc, getDocs, query, serverTimestamp, setDoc, updateDoc, where } from "firebase/firestore";
 
 const userAuthContext = createContext();
 
@@ -24,10 +24,23 @@ export function AuthProvider ({ children }) {
 			setLoading(false);
 		}, 3000);
 	});
-	const signup = async (email, password) => {
+	const signup = async (email, password, firstname, lastname) => {
 		const signedUpUser = await createUserWithEmailAndPassword(auth, email, password);
-		await updateDoc(doc(db, "users", signedUpUser.user.uid), {
+		const newUser = {
+			email,
+			firstname,
+			lastname,
+			role: "admin",
 			online: true,
+			photoURL: "",
+			createdAt: serverTimestamp(),
+			updatedAt: serverTimestamp(),
+		};
+		await setDoc(doc(db, "users", signedUpUser.user.uid), newUser);
+		setUser({
+			...newUser,
+			createdAt: new Date().toISOString(),
+			uid: signedUpUser.user.uid
 		});
 		return signedUpUser;
 	};
@@ -36,7 +49,10 @@ export function AuthProvider ({ children }) {
 		const userQuery = query(collection(db, "users"), where("email", "==", email));
 		const snapshot = await getDocs(userQuery);
 		const isAdmin = snapshot.docs.some((d) => d.data().role === "admin");
-		if (!isAdmin) return;
+		if (!isAdmin) {
+			alert("User is not an admin");
+			return;
+		};
 
 		const usersuid = await signInWithEmailAndPassword(auth, email, password);
 		await updateDoc(doc(db, "users", usersuid.user.uid), {
@@ -50,29 +66,32 @@ export function AuthProvider ({ children }) {
 		await updateDoc(doc(db, "users", user.uid), {
 			online: false,
 		});
+		setUser(null);
 	};
 
 	useEffect(() => {
-		const unsubuscribe = onAuthStateChanged(auth, async (currentUser) => {
-			if (currentUser) {
-				getDoc(doc(db, "users", currentUser.uid)).then((doc) => {
-					if (doc.exists()) {
-						setUser({
-							...doc.data(),
-							createdAt: doc.data().createdAt.toDate(),
-							uid: currentUser.uid
-						});
-					}
-					setLoading(false);
-				}).catch((err) => {
-					console.error(err);
-					setLoading(false);
-				});
-			} else {
-				setUser(null);
-			}
-		});
-		return () => unsubuscribe();
+		if (!user) {
+			const unsubuscribe = onAuthStateChanged(auth, async (currentUser) => {
+				if (currentUser) {
+					getDoc(doc(db, "users", currentUser.uid)).then((doc) => {
+						if (doc.exists()) {
+							setUser({
+								...doc.data(),
+								createdAt: doc.data().createdAt.toDate(),
+								uid: currentUser.uid
+							});
+						}
+						setLoading(false);
+					}).catch((err) => {
+						console.error(err);
+						setLoading(false);
+					});
+				} else {
+					setUser(null);
+				}
+			});
+			return () => unsubuscribe();
+		}
 	}, []);
 
 	// const resetPassword = async (email) => sendPasswordResetEmail(auth, email);

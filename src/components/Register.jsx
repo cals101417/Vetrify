@@ -19,25 +19,11 @@ function Register () {
 		e.preventDefault();
 		if (user.password === user.confirmpassword) {
 			try {
-				// setLoading(true);
-				const created_user = await signup(user.email, user.password);
-
-				await setDoc(doc(db, "users", created_user.user.uid), {
-					email: user.email,
-					firstname: user.firstname,
-					lastname: user.lastname,
-					role: "admin",
-					online: true,
-					photoURL: "",
-					createdAt: serverTimestamp(),
-					updatedAt: serverTimestamp(),
-				});
-
+				await signup(user.email, user.password, user.firstname, user.lastname);
 				navigate("/Home");
 			} catch (error) {
 				console.log(error);
 			}
-			// setLoading(false);
 		} else {
 			alert("Password Did not match! Try again..");
 			// window.location.reload(true);
