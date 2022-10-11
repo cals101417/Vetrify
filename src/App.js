@@ -8,6 +8,7 @@ import Login from "./components/Login";
 import Register from "./components/Register";
 import Home from "./pages/Home";
 import User from "./pages/User";
+import Appointments from "./pages/Appointments";
 function App() {
   return (
     <BrowserRouter>
@@ -46,6 +47,15 @@ function App() {
             element={
               <Protected_route>
                 <User />
+              </Protected_route>
+            }
+          />
+          <Route
+            path="/Appointments"
+            exact
+            element={
+              <Protected_route>
+                <Appointments />
               </Protected_route>
             }
           />
