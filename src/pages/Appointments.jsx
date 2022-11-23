@@ -6,6 +6,8 @@ import { useCollection } from "react-firebase-hooks/firestore";
 import { db } from "../auth/firebase";
 import Moment from "react-moment";
 import CompleteModal from "../components/Appointment/CompleteModal";
+import axios from "axios";
+import moment from "moment/moment";
 
 function Appointments() {
   const [open, setOpen] = useState(false);
@@ -29,13 +31,67 @@ function Appointments() {
   const [appointments, loadingAppoint] = useCollection(appointmentsQuery);
   const [pets, loadingPet] = useCollection(petsCollectionRef);
   // approved appointment
-  const approveClick = async (id) => {
-    const updateAppointmentRef = doc(db, "appointments", id);
+  const approveClick = async (appoint) => {
+    const updateAppointmentRef = doc(db, "appointments", appoint.id);
     if (window.confirm("Are you sure to Approve this appointment?")) {
-      await updateDoc(updateAppointmentRef, {
-        status: "Approved",
-      });
-      window.location.reload();
+      // await updateDoc(updateAppointmentRef, {
+      //   status: "Approved",
+      // });
+
+      const token = "ExponentPushToken[o6icTSGGdECQ-S2FrWQ4NQ]";
+      const title = "Booking Has been Approved";
+      const msg =
+        "Scheduled in " +
+        moment(appoint.data().day).format("LL") +
+        " " +
+        appoint.data().time;
+
+      let body = {
+        to: token,
+        data: {
+          title: title,
+          body: msg,
+        },
+      };
+
+      let options = {
+        method: "POST",
+        headers: new Headers({
+          Authorization:
+            "key=AAAA6qYjyh0:APA91bFkyIH35IMAHyjMtI8Xh8Ll7vWCwSRU7g38qvn3GC5BZfcT2ocD89ACpSL8RO1TSwpMN3Q3-DOKTtwv6qknyQmxfvyq_ydTSqdTgZ-YhuewHCbxF34wBNq1of0QIu2p0RsBOQeX",
+          "Content-Type": "application/json",
+        }),
+        body: JSON.stringify(body),
+      };
+
+      fetch("https://fcm.googleapis.com/fcm/send", options)
+        .then((res) => {
+          console.log(res);
+        })
+        .catch((e) => console.log(e));
+
+      // axios
+      //   .post(
+      //     "https://exp.host/--/api/v2/push/send",
+      //     {
+      //       to: "ExponentPushToken[o6icTSGGdECQ-S2FrWQ4NQ]",
+      //       title: "Booking Has been Approved",
+      //       body:
+      //         "Scheduled in " +
+      //         moment(appoint.data().day).format("LL") +
+      //         " " +
+      //         appoint.data().time,
+      //     },
+      //     {
+      //       headers: {
+      //         Authorization:
+      //           "key=AAAA6qYjyh0:APA91bFkyIH35IMAHyjMtI8Xh8Ll7vWCwSRU7g38qvn3GC5BZfcT2ocD89ACpSL8RO1TSwpMN3Q3-DOKTtwv6qknyQmxfvyq_ydTSqdTgZ-YhuewHCbxF34wBNq1of0QIu2p0RsBOQeX",
+      //       },
+      //     }
+      //   )
+      //   .then(function (response) {
+      //     console.log(response);
+      //   });
     }
   };
 
@@ -148,7 +204,7 @@ function Appointments() {
                                               <i
                                                 className="cursor-pointer fa fa-check bg-green-600 text-white p-2"
                                                 onClick={() =>
-                                                  approveClick(doc.id)
+                                                  approveClick(doc)
                                                 }
                                               ></i>
                                               <i
