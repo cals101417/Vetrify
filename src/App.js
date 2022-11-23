@@ -9,6 +9,7 @@ import Register from "./components/Register";
 import Home from "./pages/Home";
 import User from "./pages/User";
 import Appointments from "./pages/Appointments";
+import Pets from "./pages/Pets";
 function App() {
   return (
     <BrowserRouter>
@@ -56,6 +57,15 @@ function App() {
             element={
               <Protected_route>
                 <Appointments />
+              </Protected_route>
+            }
+          />
+          <Route
+            path="/Pets/:petID"
+            exact
+            element={
+              <Protected_route>
+                <Pets />
               </Protected_route>
             }
           />

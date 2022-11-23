@@ -1,5 +1,5 @@
 import React from "react";
-import { Link } from "react-router-dom";
+import { Link, NavLink } from "react-router-dom";
 import logo from "../assets/img/logo.png";
 import noUserImg from "../assets/img/user.png";
 import { useAuth } from "../auth/context/UserAuthContext";
@@ -79,36 +79,34 @@ function Sidebar() {
           <ul className="nav-main">
             <br></br>
             <li>
-              <Link to="/Home">
+              <NavLink to="/Home" activeclassname="selected">
                 <i className="fa fa-dashboard mt-0.5"></i>
                 <span className="sidebar-mini-hide">Dashboard</span>
-              </Link>
+              </NavLink>
             </li>
             <li>
-              <Link to="/Users">
+              <NavLink to="/Users">
                 <i className="si si-puzzle mt-0.5"></i>
                 <span className="sidebar-mini-hide">Users</span>
-              </Link>
+              </NavLink>
             </li>
             <li>
-              <Link to="/Appointments">
+              <NavLink to="/Appointments">
                 <i className="si si-calendar mt-0.5"></i>
                 <span className="sidebar-mini-hide">Appointments</span>
-              </Link>
+              </NavLink>
             </li>
-            <br></br>
-            <br></br>
             <li>
-              <Link to="/Home">
+              <NavLink to="/History">
                 <i className="fa fa-history mt-0.5"></i>
                 <span className="sidebar-mini-hide">History</span>
-              </Link>
+              </NavLink>
             </li>
             <li>
-              <Link to="/Home">
+              <NavLink to="/About">
                 <i className="fa fa-info-circle mt-0.5"></i>
                 <span className="sidebar-mini-hide">About</span>
-              </Link>
+              </NavLink>
             </li>
           </ul>
         </div>

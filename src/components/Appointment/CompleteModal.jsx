@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   Box,
   Button,
@@ -8,9 +8,7 @@ import {
   FormControl,
   InputLabel,
   MenuItem,
-  Modal,
   Select,
-  TextareaAutosize,
   TextField,
   Typography,
 } from "@mui/material";
@@ -29,11 +27,40 @@ const style = {
 
 const CompleteModal = ({ open, close, data, pets_data }) => {
   console.log({ data });
+  const [input, setInput] = useState(() =>
+    data.petIds.reduce((acc, curr) => {
+      acc[curr] = {
+        symptoms: "",
+        weight: "",
+        physical_exam: "",
+        diagnosis: "",
+      };
+      return acc;
+    }, {})
+  );
+
+  const handleChange = (id, event) => {
+    setInput((e) => {
+      return {
+        ...e,
+        [id]: {
+          ...e[id],
+          [event.target.name]: event.target.value,
+        },
+      };
+    });
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    console.log(input);
+  };
+
   return (
     <Dialog open={open} onClose={close} fullWidth maxWidth="md">
       <DialogTitle>Complete Appointment</DialogTitle>
       <DialogContent>
-        <form sx={{ height: "10px" }}>
+        <form sx={{ height: "10px" }} onSubmit={handleSubmit}>
           {data?.petIds?.map((pet_id) => {
             const pet = pets_data.docs.find((e) => e.id === pet_id);
             console.log(pet.data().nickname);
@@ -55,6 +82,9 @@ const CompleteModal = ({ open, close, data, pets_data }) => {
                       labelId="symptoms"
                       id="symptoms-select"
                       label="Symptoms"
+                      name="symptoms"
+                      value={input[pet_id].symptoms}
+                      onChange={(event) => handleChange(pet_id, event)}
                     >
                       <MenuItem value="Vomiting">Vomiting</MenuItem>
                       <MenuItem value="Defecation">Defecation</MenuItem>
@@ -67,21 +97,33 @@ const CompleteModal = ({ open, close, data, pets_data }) => {
                     </Select>
                   </FormControl>
                   <FormControl fullWidth margin="normal">
-                    <TextField type="number" label="Weight" />
+                    <TextField
+                      type="number"
+                      label="Weight"
+                      name="weight"
+                      value={input[pet_id].weight}
+                      onChange={(event) => handleChange(pet_id, event)}
+                    />
                   </FormControl>
                   <FormControl fullWidth margin="normal">
                     <TextField
                       id="physical_exam"
                       label="Physical Examinations"
                       multiline
+                      name="physical_exam"
+                      value={input[pet_id].physical_exam}
+                      onChange={(event) => handleChange(pet_id, event)}
                       rows={5}
                       maxRows={4}
                     />
                   </FormControl>
                   <FormControl fullWidth margin="normal">
                     <TextField
-                      id="physical_exam"
+                      id="diagnosis"
                       label="Diagnosis"
+                      name="diagnosis"
+                      value={input[pet_id].diagnosis}
+                      onChange={(event) => handleChange(pet_id, event)}
                       multiline
                       rows={5}
                       maxRows={4}
@@ -92,7 +134,11 @@ const CompleteModal = ({ open, close, data, pets_data }) => {
             );
           })}
           <div className="d-flex justify-content-center py-20">
-            <Button variant="contained" sx={{ width: "40%", fontSize: 14 }}>
+            <Button
+              variant="contained"
+              type="submit"
+              sx={{ width: "40%", fontSize: 14 }}
+            >
               Submit
             </Button>
           </div>

@@ -3,15 +3,8 @@ import Sidebar from "../layout/Sidebar";
 import Header from "../layout/Header";
 import Userlogo from "../assets/img/user.png";
 import { useCollection } from "react-firebase-hooks/firestore";
-import {
-  collection,
-  documentId,
-  getDocs,
-  query,
-  where,
-} from "firebase/firestore";
+import { collection, getDocs, query, where } from "firebase/firestore";
 import { db } from "../auth/firebase";
-import Pawlogo from "../assets/img/paw.png";
 
 function User() {
   const userCollectionRef = collection(db, "users");
@@ -31,6 +24,9 @@ function User() {
     setLoadingPets(false);
   };
 
+  const handleTest = (id) => {
+    window.location.href = "/Pets/" + id;
+  };
   return (
     <div
       id="page-container"
@@ -130,11 +126,15 @@ function User() {
                     <thead>
                       <tr>
                         <th>
-                          <i className="fa fa-paw  none" aria-hidden="true"></i>
+                          <i
+                            className="fa fa-paw  none text-center ml-15"
+                            aria-hidden="true"
+                          ></i>
                         </th>
-                        <th>Nickname</th>
-                        <th>Description</th>
+                        <th>Name</th>
                         <th>Type</th>
+                        <th>Breed</th>
+                        <th>Status</th>
                         <th className="text-right pr-20">Action</th>
                       </tr>
                     </thead>
@@ -152,20 +152,24 @@ function User() {
                               <tr>
                                 <td>
                                   <img
-                                    src={Pawlogo}
-                                    className="h-8 rounded-3xl bg-blue-600"
+                                    className="img-avatar img-avatar-thumb h-10 w-10"
+                                    src={
+                                      doc.data().petProfilePic
+                                        ? doc.data().petProfilePic
+                                        : Userlogo
+                                    }
                                   />
                                 </td>
                                 <td>{doc.data().nickname}</td>
-                                <td>
-                                  {doc.data().description
-                                    ? doc.data().description
-                                    : "n/a"}
-                                </td>
                                 <td>{doc.data().animalType}</td>
+                                <td>{doc.data().breed}</td>
+                                <td>{doc.data().status}</td>
                                 <td className="d-flex justify-content-end">
-                                  {doc.data().animalStatus}
-                                  <button class="btn btn-primary">
+                                  <button
+                                    to={"/Pets/" + doc.id}
+                                    className="btn btn-primary"
+                                    onClick={() => handleTest(doc.id)}
+                                  >
                                     View Record
                                   </button>
                                 </td>
