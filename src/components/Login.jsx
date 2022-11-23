@@ -42,7 +42,9 @@ function Login() {
                     /> */}
                 </a>
                 <img className="h-28 mx-auto" src={logo} />
-                <h1 className="h4 mt-10 font-w700 mb-10">Welcome to Vetrify</h1>
+                <h1 className="h4 mt-10 font-w700 mb-10">
+                  Welcome to Primo Vet
+                </h1>
               </div>
 
               <form onSubmit={handleSubmit}>

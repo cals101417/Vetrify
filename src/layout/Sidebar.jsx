@@ -77,6 +77,7 @@ function Sidebar() {
         </div>
         <div className="content-side content-side-full">
           <ul className="nav-main">
+            <br></br>
             <li>
               <Link to="/Home">
                 <i className="fa fa-dashboard mt-0.5"></i>
@@ -95,10 +96,12 @@ function Sidebar() {
                 <span className="sidebar-mini-hide">Appointments</span>
               </Link>
             </li>
+            <br></br>
+            <br></br>
             <li>
               <Link to="/Home">
                 <i className="fa fa-history mt-0.5"></i>
-                <span className="sidebar-mini-hide">Records</span>
+                <span className="sidebar-mini-hide">History</span>
               </Link>
             </li>
             <li>
