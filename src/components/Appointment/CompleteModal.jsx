@@ -25,7 +25,8 @@ const CompleteModal = ({ open, close, data, pets_data }) => {
 				weight: pet.data().weight || 0,
 				physical_exam: "",
 				diagnosis: "",
-				status: "Healthy"
+				status: "Healthy",
+				description: ""
 			};
 			return acc;
 		}, {})
@@ -55,6 +56,7 @@ const CompleteModal = ({ open, close, data, pets_data }) => {
 				diagnosis: val?.diagnosis || '',
 				physical_exam: val?.physical_exam || '',
 				type: data.purpose,
+				dateCompleted: data.day,
 				createdAt: serverTimestamp()
 			})
 		));
@@ -159,6 +161,18 @@ const CompleteModal = ({ open, close, data, pets_data }) => {
 											label="Diagnosis"
 											name="diagnosis"
 											value={input[pet_id].diagnosis}
+											onChange={(event) => handleChange(pet_id, event)}
+											multiline
+											rows={5}
+											inputProps={{ required: true }}
+										/>
+									</FormControl>
+									<FormControl fullWidth margin="normal">
+										<TextField
+											id="description"
+											label="description"
+											name="description"
+											value={input[pet_id].description}
 											onChange={(event) => handleChange(pet_id, event)}
 											multiline
 											rows={5}

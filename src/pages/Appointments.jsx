@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import Sidebar from "../layout/Sidebar";
 import Header from "../layout/Header";
-import { collection, doc, query, updateDoc, where } from "firebase/firestore";
+import { collection, doc, getDoc, query, updateDoc, where } from "firebase/firestore";
 import { useCollection } from "react-firebase-hooks/firestore";
 import { db } from "../auth/firebase";
 import Moment from "react-moment";
@@ -14,12 +14,19 @@ function Appointments () {
 	const [selectedApprove, setSelectedApprove] = useState(null);
 
 	const handleOpen = (apt) => {
-		setOpen(true);
 		setSelectedApprove({ ...apt.data(), id: apt.id });
+		if (apt.data().purpose === "Groom") {
+			if (window.confirm("Mark Groom as Done?")) {
+
+			}
+		} else if (apt.data().purpose === "Vaccine") {
+			// setVaccineOpen(true);
+		} else {
+			setOpen(true);
+		}
 	};
 	const handleClose = () => {
 		setOpen(false);
-		setSelectedApprove(null);
 	};
 
 	const appointmentsCollectionRef = collection(db, "appointments");
@@ -33,65 +40,27 @@ function Appointments () {
 	// approved appointment
 	const approveClick = async (appoint) => {
 		const updateAppointmentRef = doc(db, "appointments", appoint.id);
+		const userRef = doc(db, "users", appoint.data().userId);
+		const user = await getDoc(userRef);
 		if (window.confirm("Are you sure to Approve this appointment?")) {
-			// await updateDoc(updateAppointmentRef, {
-			//   status: "Approved",
-			// });
-
-			const token = "ExponentPushToken[o6icTSGGdECQ-S2FrWQ4NQ]";
-			const title = "Booking Has been Approved";
-			const msg =
-				"Scheduled in " +
-				moment(appoint.data().day).format("LL") +
-				" " +
-				appoint.data().time;
-
-			let body = {
-				to: token,
-				data: {
-					title: title,
-					body: msg,
-				},
-			};
-
-			let options = {
-				method: "POST",
-				headers: new Headers({
-					Authorization:
-						"key=AAAA6qYjyh0:APA91bFkyIH35IMAHyjMtI8Xh8Ll7vWCwSRU7g38qvn3GC5BZfcT2ocD89ACpSL8RO1TSwpMN3Q3-DOKTtwv6qknyQmxfvyq_ydTSqdTgZ-YhuewHCbxF34wBNq1of0QIu2p0RsBOQeX",
-					"Content-Type": "application/json",
-				}),
-				body: JSON.stringify(body),
-			};
-
-			fetch("https://fcm.googleapis.com/fcm/send", options)
-				.then((res) => {
-					console.log(res);
-				})
-				.catch((e) => console.log(e));
-
-			// axios
-			//   .post(
-			//     "https://exp.host/--/api/v2/push/send",
-			//     {
-			//       to: "ExponentPushToken[o6icTSGGdECQ-S2FrWQ4NQ]",
-			//       title: "Booking Has been Approved",
-			//       body:
-			//         "Scheduled in " +
-			//         moment(appoint.data().day).format("LL") +
-			//         " " +
-			//         appoint.data().time,
-			//     },
-			//     {
-			//       headers: {
-			//         Authorization:
-			//           "key=AAAA6qYjyh0:APA91bFkyIH35IMAHyjMtI8Xh8Ll7vWCwSRU7g38qvn3GC5BZfcT2ocD89ACpSL8RO1TSwpMN3Q3-DOKTtwv6qknyQmxfvyq_ydTSqdTgZ-YhuewHCbxF34wBNq1of0QIu2p0RsBOQeX",
-			//       },
-			//     }
-			//   )
-			//   .then(function (response) {
-			//     console.log(response);
-			//   });
+			await updateDoc(updateAppointmentRef, {
+				status: "Approved",
+			});
+			if (user.exists && user.data()?.pushToken) {
+				await axios.post("https://exp.host/--/api/v2/push/send", {
+					// "to": user.data()?.pushToken,
+					"to": "ExponentPushToken[o6icTSGGdECQ-S2FrWQ4NQ]",
+					"title": "Booking Has been Approved",
+					"body": `Your appointment at ${moment(appoint.data().day).format("LL")} - ${appoint.data().time} has been approved.`
+				}, {
+					headers: {
+						"host": "exp.host",
+						"accept": "application/json",
+						"accept-encoding": "gzip, deflate",
+						"content-type": "application/json",
+					}
+				}).then(val => console.log(val));
+			}
 		}
 	};
 
@@ -163,6 +132,7 @@ function Appointments () {
 														<tr>
 															<th>#</th>
 															<th>Name</th>
+															<th>Purpose</th>
 															<th>Description</th>
 															<th>Date & Time</th>
 															<th>Status</th>
@@ -185,6 +155,7 @@ function Appointments () {
 																			<tr key={doc.data().userId}>
 																				<td>{count + 1}</td>
 																				<td>{doc.data().fullname}</td>
+																				<td>{doc.data().purpose}</td>
 																				<td>
 																					{doc.data().description
 																						? doc.data().description
@@ -262,6 +233,7 @@ function Appointments () {
 														<tr>
 															<th>#</th>
 															<th>Name</th>
+															<th>Purpose</th>
 															<th>Description</th>
 															<th>Date</th>
 															<th>Time</th>
@@ -277,7 +249,7 @@ function Appointments () {
 																</td>
 															</tr>
 														) : (
-															appointments.docs.map((doc, index) => {
+															appointments.docs.map((doc) => {
 																if (doc.data().status === "Approved") {
 																	let count = 0;
 																	return (
@@ -285,6 +257,7 @@ function Appointments () {
 																			<tr key={doc.id}>
 																				<td>{count + 1}</td>
 																				<td>{doc.data().fullname}</td>
+																				<td>{doc.data().purpose}</td>
 																				<td>
 																					{doc.data().description
 																						? doc.data().description
@@ -355,6 +328,7 @@ function Appointments () {
 														<tr>
 															<th>#</th>
 															<th>Name</th>
+															<th>Purpose</th>
 															<th>Description</th>
 															<th>Date</th>
 															<th>Time</th>
@@ -378,6 +352,7 @@ function Appointments () {
 																			<tr key={doc.id}>
 																				<td>{count + 1}</td>
 																				<td>{doc.data().fullname}</td>
+																				<td>{doc.data().purpose}</td>
 																				<td>
 																					{doc.data().description
 																						? doc.data().description
