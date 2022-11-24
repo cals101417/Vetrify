@@ -1,24 +1,31 @@
 import React, { useState } from "react";
 import Sidebar from "../layout/Sidebar";
 import Header from "../layout/Header";
-import { collection, doc, getDoc, query, updateDoc, where } from "firebase/firestore";
+import { addDoc, collection, doc, getDoc, query, serverTimestamp, updateDoc, where } from "firebase/firestore";
 import { useCollection } from "react-firebase-hooks/firestore";
 import { db } from "../auth/firebase";
 import Moment from "react-moment";
 import CompleteModal from "../components/Appointment/CompleteModal";
-import axios from "axios";
 import moment from "moment/moment";
+import axiosInstance from "../utils/axiosConfig";
 
 function Appointments () {
 	const [open, setOpen] = useState(false);
 	const [selectedApprove, setSelectedApprove] = useState(null);
 
-	const handleOpen = (apt) => {
+	const appointmentsCollectionRef = collection(db, "appointments");
+	const petsCollectionRef = collection(db, "pets");
+	const appointmentsQuery = query(
+		appointmentsCollectionRef,
+		where("status", "!=", "Deleted")
+	);
+	const [appointments, loadingAppoint] = useCollection(appointmentsQuery);
+	const [pets] = useCollection(petsCollectionRef);
+
+	const handleOpen = async (apt) => {
 		setSelectedApprove({ ...apt.data(), id: apt.id });
 		if (apt.data().purpose === "Groom") {
-			if (window.confirm("Mark Groom as Done?")) {
-
-			}
+			markGroomAsCompleted(apt);
 		} else if (apt.data().purpose === "Vaccine") {
 			// setVaccineOpen(true);
 		} else {
@@ -29,49 +36,58 @@ function Appointments () {
 		setOpen(false);
 	};
 
-	const appointmentsCollectionRef = collection(db, "appointments");
-	const petsCollectionRef = collection(db, "pets");
-	const appointmentsQuery = query(
-		appointmentsCollectionRef,
-		where("status", "!=", "Deleted")
-	);
-	const [appointments, loadingAppoint] = useCollection(appointmentsQuery);
-	const [pets, loadingPet] = useCollection(petsCollectionRef);
+	const markGroomAsCompleted = async (apt) => {
+		if (window.confirm("Mark Groom as Done?")) {
+			const aptPets = apt.data().petIds.map(petId => {
+				return addDoc(collection(db, "groom_records"), {
+					petId,
+					dateGroomed: apt.data().day,
+					createdAt: serverTimestamp()
+				});
+			});
+			await Promise.all(aptPets);
+			await updateDoc(doc(db, "appointments", apt.id), {
+				status: "Completed",
+			});
+		}
+	}
+
+
 	// approved appointment
 	const approveClick = async (appoint) => {
 		const updateAppointmentRef = doc(db, "appointments", appoint.id);
 		const userRef = doc(db, "users", appoint.data().userId);
-		const user = await getDoc(userRef);
 		if (window.confirm("Are you sure to Approve this appointment?")) {
+			const user = await getDoc(userRef);
 			await updateDoc(updateAppointmentRef, {
 				status: "Approved",
 			});
 			if (user.exists && user.data()?.pushToken) {
-				await axios.post("https://exp.host/--/api/v2/push/send", {
-					// "to": user.data()?.pushToken,
-					"to": "ExponentPushToken[o6icTSGGdECQ-S2FrWQ4NQ]",
+				await axiosInstance.post("/send/notification", {
+					"to": user.data()?.pushToken,
 					"title": "Booking Has been Approved",
 					"body": `Your appointment at ${moment(appoint.data().day).format("LL")} - ${appoint.data().time} has been approved.`
-				}, {
-					headers: {
-						"host": "exp.host",
-						"accept": "application/json",
-						"accept-encoding": "gzip, deflate",
-						"content-type": "application/json",
-					}
-				}).then(val => console.log(val));
+				});
 			}
 		}
 	};
 
 	// decline appointment
-	const declineClick = async (id) => {
-		const cancelAppointmentRef = doc(db, "appointments", id);
+	const declineClick = async (apt) => {
+		const cancelAppointmentRef = doc(db, "appointments", apt.id);
+		const userRef = doc(db, "users", apt.data().userId);
 		if (window.confirm("Are you sure to Cancel this appointment?")) {
+			const user = await getDoc(userRef);
 			await updateDoc(cancelAppointmentRef, {
 				status: "Cancelled",
 			});
-			window.location.reload();
+			if (user.exists && user.data()?.pushToken) {
+				await axiosInstance.post("/send/notification", {
+					"to": user.data()?.pushToken,
+					"title": "Booking Has been Cancelled",
+					"body": `Your appointment at ${moment(apt.data().day).format("LL")} - ${apt.data().time} has been cancelled.`
+				});
+			}
 		}
 	};
 
@@ -181,7 +197,7 @@ function Appointments () {
 																							<i
 																								className="cursor-pointer fa fa-close bg-red-600 text-white p-2"
 																								onClick={() =>
-																									declineClick(doc.id)
+																									declineClick(doc)
 																								}
 																							></i>
 																						</div>
@@ -282,6 +298,12 @@ function Appointments () {
 																						<h1 className="bg-green-600 text-white p-2 px-3">
 																							Mark as Complete
 																						</h1>
+																						<i
+																							className="cursor-pointer fa fa-close bg-red-600 text-white p-2"
+																							onClick={() =>
+																								declineClick(doc)
+																							}
+																						></i>
 																					</div>
 																				</td>
 																			</tr>
