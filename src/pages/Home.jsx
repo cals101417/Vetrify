@@ -1,10 +1,39 @@
-import { async } from "@firebase/util";
-import React from "react";
-import { useAuth } from "../auth/context/UserAuthContext";
+import React, { useEffect, useState } from "react";
 import Sidebar from "../layout/Sidebar";
 import Header from "../layout/Header";
 import Pawlogo from "../assets/img/paw.png";
+import { collection, doc, getDoc, query, where } from "firebase/firestore";
+import { db } from "../auth/firebase";
+import { useCollection } from "react-firebase-hooks/firestore";
+import { useNavigate } from "react-router-dom";
 function Home() {
+  const [totalUser, setTotalUser] = useState([]);
+  const navigate = useNavigate();
+  const usersCollectionRef = collection(db, "users");
+  const userQuery = query(usersCollectionRef, where("role", "!=", "admin"));
+  const [users, loading] = useCollection(userQuery);
+
+  const appointmentsCollectionRef = collection(db, "appointments");
+  const appointQuery = query(
+    appointmentsCollectionRef,
+    where("status", "!=", "Cancelled")
+  );
+  const [appointData, loadingAppointments] = useCollection(appointQuery);
+
+  const petsCollectionRef = collection(db, "pets");
+  const petsQuery = query(petsCollectionRef);
+  const [petsData, loadingPets] = useCollection(petsQuery);
+
+  const finishCollectionRef = collection(db, "appointments");
+  const finishQuery = query(
+    finishCollectionRef,
+    where("status", "==", "Completed")
+  );
+  const [finishData, loadingfinish] = useCollection(finishQuery);
+
+  const navigateAppointments = () => {
+    navigate("/Appointments");
+  };
   return (
     <div
       id="page-container"
@@ -22,7 +51,9 @@ function Home() {
               <div className="col-md-6 col-xl-3">
                 <a className="block block-link-shadow">
                   <div className="block-content block-content-full">
-                    <div className="font-size-h2 font-w700">64</div>
+                    <div className="font-size-h2 font-w700">
+                      {users?.docs.length}
+                    </div>
                     <div className="font-size-sm font-w600 text-uppercase text-muted">
                       Total Users
                     </div>
@@ -32,7 +63,9 @@ function Home() {
               <div className="col-md-6 col-xl-3">
                 <a className="block block-link-shadow">
                   <div className="block-content block-content-full">
-                    <div className="font-size-h2 font-w700">60</div>
+                    <div className="font-size-h2 font-w700">
+                      {appointData?.docs.length}
+                    </div>
                     <div className="font-size-sm font-w600 text-uppercase text-muted">
                       Total Appointments
                     </div>
@@ -42,7 +75,9 @@ function Home() {
               <div className="col-md-6 col-xl-3">
                 <a className="block block-link-shadow">
                   <div className="block-content block-content-full text-right">
-                    <div className="font-size-h2 font-w700">15</div>
+                    <div className="font-size-h2 font-w700">
+                      {petsData?.docs.length}
+                    </div>
                     <div className="font-size-sm font-w600 text-uppercase text-muted">
                       Total Added Pets
                     </div>
@@ -52,7 +87,9 @@ function Home() {
               <div className="col-md-6 col-xl-3">
                 <a className="block block-link-shadow">
                   <div className="block-content block-content-full text-right">
-                    <div className="font-size-h2 font-w700">5</div>
+                    <div className="font-size-h2 font-w700">
+                      {finishData?.docs.length}
+                    </div>
                     <div className="font-size-sm font-w600 text-uppercase text-muted">
                       Finished Appointments
                     </div>
@@ -61,37 +98,51 @@ function Home() {
               </div>
             </div>
             <div className="row gutters-tiny pt-20">
-              <div className="col-md-6 col-xl-8">
+              <div className="col-md-6 col-xl-8 cursor-pointer">
                 <a className="block block-link-shadow">
-                  <div className="block-content block-content-full">
-                    <div className="table-responsive px-20 py-20 h-96">
-                      <table className="table table-striped table-vcenter table-sm">
-                        <thead></thead>
+                  <div
+                    className="block-content block-content-full"
+                    onClick={navigateAppointments}
+                  >
+                    <div
+                      className="table-responsive px-20"
+                      style={{ height: "550px", paddingTop: "10px" }}
+                    >
+                      <table className="table table-striped table-vcenter table-md">
+                        <thead>
+                          <tr>
+                            <th>Appointments Log</th>
+                          </tr>
+                        </thead>
                         <tbody>
-                          <tr>
-                            <td>
-                              {" "}
-                              <img
-                                src={Pawlogo}
-                                className="h-8 rounded-3xl bg-blue-600"
-                              />
-                            </td>
-                            <td> Alden Ramirez</td>
-                            <td> Finished an appointment</td>
-                            <td> October 25, 2022</td>
-                          </tr>
-                          <tr>
-                            <td>
-                              {" "}
-                              <img
-                                src={Pawlogo}
-                                className="h-8 rounded-3xl bg-blue-600"
-                              />
-                            </td>
-                            <td> test</td>
-                            <td> test</td>
-                            <td> test</td>
-                          </tr>
+                          {appointData?.docs.map((list) => (
+                            <tr>
+                              <td>
+                                {" "}
+                                <img
+                                  src={
+                                    list.data().photoURL
+                                      ? list.data().photoURL
+                                      : Pawlogo
+                                  }
+                                  className="h-8 w-8 rounded-3xl bg-blue-600"
+                                />
+                              </td>
+                              <td> {list.data().fullname} </td>
+                              <td>
+                                {list.data().status == "Approved"
+                                  ? "Appointment has been approved"
+                                  : list.data().status == "Completed"
+                                  ? "Finish an appointment"
+                                  : list.data().status == "Cancelled"
+                                  ? "Appointment has been cancelled"
+                                  : list.data().status == "Pending"
+                                  ? "Book a appointment"
+                                  : ""}
+                              </td>
+                              <td> October 25, 2022</td>
+                            </tr>
+                          ))}
                         </tbody>
                       </table>
                     </div>
@@ -100,33 +151,43 @@ function Home() {
               </div>
               <div className="col-md-6 col-xl-4">
                 <a className="block block-link-shadow">
-                  <div className="block-content block-content-full">
-                    <div className="table-responsive px-20 py-20 h-96">
+                  <div
+                    className="block-content block-content-full cursor-pointer"
+                    onClick={navigateAppointments}
+                  >
+                    <div
+                      className="table-responsive px-20 py-20"
+                      style={{ height: "550px" }}
+                    >
                       <table className="table table-vcenter table-sm">
                         <thead>
                           <tr>
                             <th>Pending Appointments</th>
-                            <th>
-                              <i
-                                className="fa fa-clock-o d-sm none"
-                                aria-hidden="true"
-                              ></i>
-                            </th>
                           </tr>
                         </thead>
                         <tbody>
-                          <tr>
-                            <td className="py-10">
-                              <h1>John Doe</h1>
-                            </td>
-                            <td className="py-10">
-                              {" "}
-                              <img
-                                src={Pawlogo}
-                                className="h-8 rounded-3xl bg-blue-600"
-                              />
-                            </td>
-                          </tr>
+                          {appointData?.docs.map((list) => {
+                            if (list.data().status === "Pending") {
+                              return (
+                                <tr>
+                                  <td className="py-10">
+                                    <h1>{list.data().fullname}</h1>
+                                  </td>
+                                  <td className="py-10">
+                                    {" "}
+                                    <img
+                                      src={
+                                        list.data().photoURL
+                                          ? list.data().photoURL
+                                          : Pawlogo
+                                      }
+                                      className="h-8 w-8 rounded-3xl bg-blue-600"
+                                    />
+                                  </td>
+                                </tr>
+                              );
+                            }
+                          })}
                         </tbody>
                       </table>
                     </div>

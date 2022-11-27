@@ -10,6 +10,8 @@ import Home from "./pages/Home";
 import User from "./pages/User";
 import Appointments from "./pages/Appointments";
 import Pets from "./pages/Pets";
+import About from "./pages/About";
+import History from "./pages/History";
 function App() {
   return (
     <BrowserRouter>
@@ -57,6 +59,24 @@ function App() {
             element={
               <Protected_route>
                 <Appointments />
+              </Protected_route>
+            }
+          />
+          <Route
+            path="/About"
+            exact
+            element={
+              <Protected_route>
+                <About />
+              </Protected_route>
+            }
+          />
+          <Route
+            path="/History"
+            exact
+            element={
+              <Protected_route>
+                <History />
               </Protected_route>
             }
           />
