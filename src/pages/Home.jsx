@@ -32,7 +32,7 @@ function Home() {
   const [finishData, loadingfinish] = useCollection(finishQuery);
 
   const navigateAppointments = () => {
-    navigate("/Appointments");
+    navigate("/Appointments/pendings");
   };
   return (
     <div
@@ -43,18 +43,19 @@ function Home() {
       <Header />
       <main id="main-container">
         <div className="content">
-          <div className="content-header">
-            <h1>Overview</h1>
-          </div>
-          <div className="block-content block-content-full block-content-sm bg-body-light">
+          <div className="block-content block-content-full bg-body-light">
             <div className="row gutters-tiny">
-              <div className="col-md-6 col-xl-3">
+              <div className="col-md-6 col-xl-3 ">
                 <a className="block block-link-shadow">
-                  <div className="block-content block-content-full">
+                  <div className="block-content block-content-full text-lg-left text-center">
                     <div className="font-size-h2 font-w700">
+                      <li
+                        className="fa fa-user mr-2"
+                        style={{ color: "#1c51c2" }}
+                      ></li>
                       {users?.docs.length}
                     </div>
-                    <div className="font-size-sm font-w600 text-uppercase text-muted">
+                    <div className="font-size-sm font-w600  text-uppercase text-muted">
                       Total Users
                     </div>
                   </div>
@@ -62,8 +63,12 @@ function Home() {
               </div>
               <div className="col-md-6 col-xl-3">
                 <a className="block block-link-shadow">
-                  <div className="block-content block-content-full">
+                  <div className="block-content block-content-full text-lg-left text-center">
                     <div className="font-size-h2 font-w700">
+                      <li
+                        className="fa fa-calendar mr-2"
+                        style={{ color: "red" }}
+                      ></li>
                       {appointData?.docs.length}
                     </div>
                     <div className="font-size-sm font-w600 text-uppercase text-muted">
@@ -74,9 +79,13 @@ function Home() {
               </div>
               <div className="col-md-6 col-xl-3">
                 <a className="block block-link-shadow">
-                  <div className="block-content block-content-full text-right">
+                  <div className="block-content block-content-full text-lg-right text-center">
                     <div className="font-size-h2 font-w700">
-                      {petsData?.docs.length}
+                      {petsData?.docs.length}{" "}
+                      <li
+                        className="fa fa-paw mr-2"
+                        style={{ color: "#cccc00" }}
+                      ></li>
                     </div>
                     <div className="font-size-sm font-w600 text-uppercase text-muted">
                       Total Added Pets
@@ -86,9 +95,13 @@ function Home() {
               </div>
               <div className="col-md-6 col-xl-3">
                 <a className="block block-link-shadow">
-                  <div className="block-content block-content-full text-right">
+                  <div className="block-content block-content-full text-lg-right text-center">
                     <div className="font-size-h2 font-w700">
-                      {finishData?.docs.length}
+                      {finishData?.docs.length}{" "}
+                      <li
+                        className="fa fa-calendar-check-o mr-2"
+                        style={{ color: "green" }}
+                      ></li>
                     </div>
                     <div className="font-size-sm font-w600 text-uppercase text-muted">
                       Finished Appointments
@@ -106,9 +119,9 @@ function Home() {
                   >
                     <div
                       className="table-responsive px-20"
-                      style={{ height: "550px", paddingTop: "10px" }}
+                      style={{ height: "650px", paddingTop: "10px" }}
                     >
-                      <table className="table table-striped table-vcenter table-md">
+                      <table className="table table-striped table-vcenter table-lg">
                         <thead>
                           <tr>
                             <th>Appointments Log</th>
@@ -117,7 +130,7 @@ function Home() {
                         <tbody>
                           {appointData?.docs.map((list) => (
                             <tr>
-                              <td>
+                              <td className="d-flex justify-content-start">
                                 {" "}
                                 <img
                                   src={
@@ -125,22 +138,32 @@ function Home() {
                                       ? list.data().photoURL
                                       : Pawlogo
                                   }
-                                  className="h-8 w-8 rounded-3xl bg-blue-600"
-                                />
+                                  className="h-8 w-8 rounded-3xl bg-blue-600 mr-2"
+                                />{" "}
+                                {list.data().fullname}{" "}
                               </td>
-                              <td> {list.data().fullname} </td>
-                              <td>
-                                {list.data().status == "Approved"
-                                  ? "Appointment has been approved"
-                                  : list.data().status == "Completed"
-                                  ? "Finish an appointment"
-                                  : list.data().status == "Cancelled"
-                                  ? "Appointment has been cancelled"
-                                  : list.data().status == "Pending"
-                                  ? "Book a appointment"
-                                  : ""}
+                              <td className="text-center">
+                                {list.data().status == "Approved" ? (
+                                  <h1 className="bg-primary text-center p-1 text-white rounded-xl">
+                                    Approved
+                                  </h1>
+                                ) : list.data().status == "Completed" ? (
+                                  <h1 className="bg-success text-center p-1 text-white rounded-xl">
+                                    Completed
+                                  </h1>
+                                ) : list.data().status == "Cancelled" ? (
+                                  <h1 className="bg-danger text-center p-1 text-white rounded-xl">
+                                    Cancelled
+                                  </h1>
+                                ) : list.data().status == "Pending" ? (
+                                  <h1 className="bg-dark text-center p-1 text-white rounded-xl">
+                                    Pending
+                                  </h1>
+                                ) : (
+                                  ""
+                                )}
                               </td>
-                              <td> October 25, 2022</td>
+                              <td className="text-right"> October 25, 2022</td>
                             </tr>
                           ))}
                         </tbody>
@@ -157,9 +180,9 @@ function Home() {
                   >
                     <div
                       className="table-responsive px-20 py-20"
-                      style={{ height: "550px" }}
+                      style={{ height: "650px" }}
                     >
-                      <table className="table table-vcenter table-sm">
+                      <table className="table table-vcenter table-lg">
                         <thead>
                           <tr>
                             <th>Pending Appointments</th>
@@ -170,10 +193,7 @@ function Home() {
                             if (list.data().status === "Pending") {
                               return (
                                 <tr>
-                                  <td className="py-10">
-                                    <h1>{list.data().fullname}</h1>
-                                  </td>
-                                  <td className="py-10">
+                                  <td className="d-flex justify-content-start py-10">
                                     {" "}
                                     <img
                                       src={
@@ -181,8 +201,13 @@ function Home() {
                                           ? list.data().photoURL
                                           : Pawlogo
                                       }
-                                      className="h-8 w-8 rounded-3xl bg-blue-600"
-                                    />
+                                      className="h-8 w-8 rounded-3xl bg-blue-600 mr-3"
+                                    />{" "}
+                                    {list.data().fullname}
+                                  </td>
+                                  <td className="py-10">
+                                    {" "}
+                                    <li className="fa fa-arrow-right bg-success text-white p-2"></li>
                                   </td>
                                 </tr>
                               );

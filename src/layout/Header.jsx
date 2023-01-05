@@ -1,4 +1,5 @@
 import React from "react";
+import { NavLink } from "react-router-dom";
 import { useAuth } from "../auth/context/UserAuthContext";
 function Header() {
   const { logout, user } = useAuth();
@@ -10,26 +11,9 @@ function Header() {
     }
   };
   return (
-    <header id="page-header" className="bg-dark">
+    <header id="page-header" style={{ backgroundColor: "#061420" }}>
       <div className="content-header">
-        <div className="content-header-section">
-          {/* <button
-            type="button"
-            className="btn btn-circle btn-dual-secondary"
-            data-toggle="layout"
-            data-action="sidebar_toggle"
-          >
-            <i className="fa fa-navicon"></i>
-          </button> */}
-          {/* <button
-            type="button"
-            className="btn btn-circle btn-dual-secondary"
-            data-toggle="layout"
-            data-action="header_search_on"
-          >
-            <i className="fa fa-search"></i>
-          </button> */}
-        </div>
+        <div className="content-header-section"></div>
 
         <div className="content-header-section">
           <div className="btn-group" role="group">
@@ -55,7 +39,29 @@ function Header() {
               {/* <a className="dropdown-item" href="profile.php">
                                 <i className="si si-user mr-5"></i> Profile
                             </a> */}
-              <div></div>
+              <NavLink to="/Home" className="dropdown-item cursor-pointer">
+                <i className="fa fa-dashboard mr-5"></i>
+                Dashboard
+              </NavLink>
+              <NavLink to="/Users" className="dropdown-item cursor-pointer">
+                <i className="si si-puzzle mr-5"></i>
+                Users
+              </NavLink>
+              <NavLink
+                to="/Appointments"
+                className="dropdown-item cursor-pointer"
+              >
+                <i className="si si-calendar mr-5"></i>
+                Appointments
+              </NavLink>
+              <NavLink to="/History" className="dropdown-item cursor-pointer">
+                <i className="fa fa-history mr-5"></i>
+                History
+              </NavLink>
+              <NavLink to="/About" className="dropdown-item cursor-pointer">
+                <i className="fa fa-info-circle mr-5"></i>
+                About
+              </NavLink>
               <a
                 className="dropdown-item cursor-pointer"
                 onClick={handleLogout}

@@ -54,7 +54,7 @@ function App() {
             }
           />
           <Route
-            path="/Appointments"
+            path="/Appointments/:type"
             exact
             element={
               <Protected_route>

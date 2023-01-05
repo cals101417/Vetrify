@@ -47,9 +47,15 @@ const CompleteVaccineModal = ({ open, close, data }) => {
       window.location.reload();
     }
   };
+  const handleReload = () => {
+    window.location.reload();
+  };
   return (
     <Dialog open={open} onClose={close} fullWidth maxWidth="sm">
-      <DialogTitle>Complete Appointment</DialogTitle>
+      <DialogTitle className="d-flex justify-content-between">
+        <h1>Complete Appointment</h1>
+        <li className="fa fa-close cursor-pointer" onClick={handleReload}></li>
+      </DialogTitle>
       <DialogContent>
         <form sx={{ height: "10px" }} onSubmit={handleSumit}>
           <Box sx={{ paddingTop: 3 }}>

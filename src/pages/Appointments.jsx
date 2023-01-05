@@ -6,6 +6,7 @@ import {
   collection,
   doc,
   getDoc,
+  onSnapshot,
   query,
   serverTimestamp,
   updateDoc,
@@ -18,42 +19,164 @@ import CompleteModal from "../components/Appointment/CompleteModal";
 import moment from "moment/moment";
 import axiosInstance from "../utils/axiosConfig";
 import CompleteVaccineModal from "../components/Appointment/CompleteVaccineModal";
+import { useParams } from "react-router-dom";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TablePagination,
+  TableRow,
+} from "@mui/material";
+import PageHead from "../components/Table/PageHead";
+import PageToolbar from "../components/Table/PageToolbar";
+import Userlogo from "../assets/img/user.png";
+import { getComparator, stableSort } from "../utils/tableUtils";
+import { useEffect } from "react";
+
+const headCells = [
+  {
+    label: "#",
+    sortable: false,
+  },
+  {
+    id: "firstname",
+    label: "Name",
+    sortable: true,
+  },
+  {
+    id: "gender",
+    label: "Gender",
+    sortable: true,
+  },
+  {
+    id: "purpose",
+    label: "Purpose",
+    sortable: true,
+  },
+  {
+    id: "description",
+    label: "Description",
+    sortable: true,
+  },
+  {
+    id: "day",
+    label: "Date & time",
+    sortable: false,
+  },
+  {
+    label: "",
+    sortable: false,
+  },
+];
 
 function Appointments() {
+  let { type } = useParams();
   const [open, setOpen] = useState(false);
   const [openVaccine, setOpenVaccine] = useState(false);
-
+  const [order, setOrder] = useState("asc");
+  const [tbOrderBy, setTbOrderBy] = useState("calories");
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
   const [selectedApprove, setSelectedApprove] = useState(null);
-
+  const [appointmentData, setAppointmentData] = useState([]);
+  const [filterAppointmentData, setFilterAppointmentData] = useState([]);
   const appointmentsCollectionRef = collection(db, "appointments");
   const petsCollectionRef = collection(db, "pets");
   const appointmentsQuery = query(
     appointmentsCollectionRef,
     where("status", "!=", "Deleted")
   );
+  let count = 1;
   const [appointments, loadingAppoint] = useCollection(appointmentsQuery);
   const [pets] = useCollection(petsCollectionRef);
+  let dynamicStatus = "";
+  if (type === "pendings") {
+    dynamicStatus = "Pending";
+  } else if (type === "approved") {
+    dynamicStatus = "Approved";
+  } else {
+    dynamicStatus = "Completed";
+  }
+  // Fetch Appointments Data
+  useEffect(() => {
+    async function getUsers() {
+      const q = query(
+        appointmentsCollectionRef,
+        where("status", "==", dynamicStatus)
+      );
+      const unsubscribe = onSnapshot(q, (querySnapshot) => {
+        const result = [];
+
+        querySnapshot.forEach((doc) => {
+          result.push({
+            ...doc.data(),
+            id: doc.id,
+          });
+        });
+        setAppointmentData(result);
+        setFilterAppointmentData(result);
+      });
+      return unsubscribe;
+    }
+
+    getUsers();
+  }, []);
+
+  const handleRequestSort = (_event, property) => {
+    const isAsc = tbOrderBy === property && order === "asc";
+    setOrder(isAsc ? "desc" : "asc");
+    setTbOrderBy(property);
+  };
+
+  const handleChangePage = (_event, newPage) => {
+    setPage(newPage);
+  };
+
+  const handleChangeRowsPerPage = (event) => {
+    setRowsPerPage(+event.target.value);
+    setPage(0);
+  };
+
+  const handleFilter = (event) => {
+    const filtered = appointmentData.filter((user) =>
+      `${user?.fullname}`
+        .toLocaleLowerCase()
+        .includes(event.target.value.toLocaleLowerCase())
+    );
+    if (event.target.value != "") {
+      setAppointmentData(filtered);
+    } else {
+      setAppointmentData(filterAppointmentData);
+    }
+  };
+
+  const emptyRows =
+    page > 0
+      ? Math.max(0, (1 + page) * rowsPerPage - appointmentData.length)
+      : 0;
 
   const handleOpen = async (apt) => {
-    setSelectedApprove({ ...apt.data(), id: apt.id });
-    if (apt.data().purpose === "Groom") {
+    setSelectedApprove({ ...apt, id: apt.id });
+    if (apt.purpose === "Groom") {
       markGroomAsCompleted(apt);
-    } else if (apt.data().purpose === "Vaccine") {
+    } else if (apt.purpose === "Vaccine") {
       setOpenVaccine(true);
     } else {
       setOpen(true);
     }
   };
+
   const handleClose = () => {
     setOpen(false);
   };
 
   const markGroomAsCompleted = async (apt) => {
     if (window.confirm("Mark Groom as Done?")) {
-      const aptPets = apt.data().petIds.map((petId) => {
+      const aptPets = apt.petIds.map((petId) => {
         return addDoc(collection(db, "groom_records"), {
           petId,
-          dateGroomed: apt.data().day,
+          dateGroomed: apt.day,
           appointment_id: apt.id,
           createdAt: serverTimestamp(),
         });
@@ -67,20 +190,23 @@ function Appointments() {
 
   // approved appointment
   const approveClick = async (appoint) => {
+    console.log(appoint);
     const updateAppointmentRef = doc(db, "appointments", appoint.id);
-    const userRef = doc(db, "users", appoint.data().userId);
+    const userRef = doc(db, "users", appoint.userId);
+
     if (window.confirm("Are you sure to Approve this appointment?")) {
       const user = await getDoc(userRef);
       await updateDoc(updateAppointmentRef, {
         status: "Approved",
       });
+
       if (user.exists && user.data()?.pushToken) {
         await axiosInstance.post("/send/notification", {
           to: user.data()?.pushToken,
           title: "Booking Has been Approved",
-          body: `Your appointment at ${moment(appoint.data().day).format(
-            "LL"
-          )} - ${appoint.data().time} has been approved.`,
+          body: `Your appointment at ${moment(appoint.day).format("LL")} - ${
+            appoint.time
+          } has been approved.`,
         });
       }
     }
@@ -89,7 +215,7 @@ function Appointments() {
   // decline appointment
   const declineClick = async (apt) => {
     const cancelAppointmentRef = doc(db, "appointments", apt.id);
-    const userRef = doc(db, "users", apt.data().userId);
+    const userRef = doc(db, "users", apt.userId);
     if (window.confirm("Are you sure to Cancel this appointment?")) {
       const user = await getDoc(userRef);
       await updateDoc(cancelAppointmentRef, {
@@ -99,11 +225,12 @@ function Appointments() {
         await axiosInstance.post("/send/notification", {
           to: user.data()?.pushToken,
           title: "Booking Has been Cancelled",
-          body: `Your appointment at ${moment(apt.data().day).format("LL")} - ${
-            apt.data().time
+          body: `Your appointment at ${moment(apt.day).format("LL")} - ${
+            apt.time
           } has been cancelled.`,
         });
       }
+      window.location.reload();
     }
   };
 
@@ -116,312 +243,284 @@ function Appointments() {
         <Sidebar />
         <Header />
         <main id="main-container">
-          <div className="bg-dark">
-            <div className="bg-image bg-image-middle bg-gradient-to-r from-cyan-900 to-blue-500">
-              <div className="content content-top text-center ">
-                <div className="py-30">
-                  <h1 className="font-w700 text-3xl text-white mb-10">
-                    Appointments
-                  </h1>
-                </div>
-              </div>
-            </div>
-          </div>
           <div className="content">
-            <div className="table-responsive pb-10">
-              <div className="block-content">
-                <div id="accordion" role="tablist" aria-multiselectable="true">
-                  <div className="block block-bordered block-rounded mb-2">
-                    <div
-                      className="block-header bg-primary text-white"
-                      role="tab"
-                      id="accordion_h1"
-                    >
-                      <a
-                        className="font-w600"
-                        data-toggle="collapse"
-                        data-parent="#accordion"
-                        href="#accordion_q1"
-                        aria-expanded="true"
-                        aria-controls="accordion_q1"
-                      >
-                        Pending Appointments
-                      </a>
-                    </div>
-                    <div
-                      id="accordion_q1"
-                      className="collapse show"
-                      role="tabpanel"
-                      aria-labelledby="accordion_h1"
-                      data-parent="#accordion"
-                    >
-                      <div className="block-content">
-                        <div style={{ height: "500px" }}>
-                          <table
-                            className="table table-striped table-vcenter table-md"
-                            id="appointment_table"
-                          >
-                            <thead>
-                              <tr>
-                                <th>#</th>
-                                <th>Name</th>
-                                <th>Purpose</th>
-                                <th>Description</th>
-                                <th>Date & Time</th>
-                                <th>Status</th>
-                                <th>Action</th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              {loadingAppoint ? (
-                                <tr>
-                                  <td colSpan={5} className="text-center">
-                                    loading...
-                                  </td>
-                                </tr>
-                              ) : (
-                                appointments.docs.map((doc) => {
-                                  if (doc.data().status === "Pending") {
-                                    let count = 0;
-                                    return (
-                                      <>
-                                        <tr key={doc.data().userId}>
-                                          <td>{count + 1}</td>
-                                          <td>{doc.data().fullname}</td>
-                                          <td>{doc.data().purpose}</td>
-                                          <td>
-                                            {doc.data().description
-                                              ? doc.data().description
-                                              : "No description added"}
-                                          </td>
-                                          <td>
-                                            <Moment format="MMM DD">
-                                              {doc.data().day}
-                                            </Moment>
-                                            {", "}
-                                            {doc.data().time}
-                                          </td>
-                                          <td>{doc.data().status}</td>
-                                          <td>
-                                            {doc.data().status == "Pending" ? (
-                                              <div className="flex gap-3">
-                                                <i
-                                                  className="cursor-pointer fa fa-check bg-green-600 text-white p-2"
-                                                  onClick={() =>
-                                                    approveClick(doc)
-                                                  }
-                                                ></i>
-                                                <i
-                                                  className="cursor-pointer fa fa-close bg-red-600 text-white p-2"
-                                                  onClick={() =>
-                                                    declineClick(doc)
-                                                  }
-                                                ></i>
-                                              </div>
-                                            ) : (
-                                              ""
-                                            )}
-                                          </td>
-                                        </tr>
-                                      </>
-                                    );
-                                  }
-                                })
-                              )}
-                            </tbody>
-                          </table>
+            <div className="content-header d-flex justify-content-between">
+              <h1 className="font-bold">
+                {type == "pendings"
+                  ? "Pending "
+                  : type == "approved"
+                  ? "Approved "
+                  : type == "completed"
+                  ? "Completed "
+                  : ""}
+                Bookings
+              </h1>
+              <PageToolbar handleSearch={handleFilter} />
+            </div>
+            <div className="block">
+              {type == "pendings" && (
+                <>
+                  <TableContainer>
+                    <Table size="medium">
+                      <PageHead
+                        order={order}
+                        orderBy={tbOrderBy}
+                        onRequestSort={handleRequestSort}
+                        headCells={headCells}
+                      />
+                      {loadingAppoint ? (
+                        <div className="h-100 col-12 d-flex text-center justify-content-center">
+                          <p>Loading...</p>
                         </div>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="block block-bordered block-rounded mb-2">
-                    <div
-                      className="block-header bg-primary text-white"
-                      role="tab"
-                      id="accordion_h2"
-                    >
-                      <a
-                        className="font-w600"
-                        data-toggle="collapse"
-                        data-parent="#accordion"
-                        href="#accordion_q2"
-                        aria-expanded="true"
-                        aria-controls="accordion_q2"
-                      >
-                        Approved Appointments
-                      </a>
-                    </div>
-                    <div
-                      id="accordion_q2"
-                      className="collapse "
-                      role="tabpanel"
-                      aria-labelledby="accordion_h2"
-                      data-parent="#accordion"
-                    >
-                      <div className="block-content">
-                        <div style={{ height: "500px" }}>
-                          <table
-                            className="table table-striped table-vcenter table-md"
-                            id="appointment_table"
-                          >
-                            <thead>
-                              <tr>
-                                <th>#</th>
-                                <th>Name</th>
-                                <th>Purpose</th>
-                                <th>Description</th>
-                                <th>Date</th>
-                                <th>Status</th>
-                                <th className="text-center">Action</th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              {loadingAppoint ? (
-                                <tr>
-                                  <td colSpan={5} className="text-center">
-                                    loading...
-                                  </td>
-                                </tr>
-                              ) : (
-                                appointments.docs.map((doc) => {
-                                  if (doc.data().status === "Approved") {
-                                    let count = 0;
-                                    return (
-                                      <>
-                                        <tr key={doc.id}>
-                                          <td>{count + 1}</td>
-                                          <td>{doc.data().fullname}</td>
-                                          <td>{doc.data().purpose}</td>
-                                          <td>
-                                            {doc.data().description
-                                              ? doc.data().description
-                                              : "No description added"}
-                                          </td>
-                                          <td>
-                                            <Moment format="MMM DD">
-                                              {doc.data().day}
-                                            </Moment>
-                                            {", "}
-                                            {doc.data().time}
-                                          </td>
-                                          <td>{doc.data().status}</td>
-                                          <td>
-                                            <div
-                                              className="d-flex justify-content-center"
-                                              style={{ cursor: "pointer" }}
-                                              onClick={() => handleOpen(doc)}
-                                            >
-                                              <h1 className="bg-green-600 text-white p-2 px-3 mr-3">
-                                                Mark as Complete
-                                              </h1>
-                                              <i
-                                                className="cursor-pointer fa fa-close bg-red-600 text-white p-2"
-                                                onClick={() =>
-                                                  declineClick(doc)
-                                                }
-                                              ></i>
-                                            </div>
-                                          </td>
-                                        </tr>
-                                      </>
-                                    );
-                                  }
-                                })
-                              )}
-                            </tbody>
-                          </table>
+                      ) : (
+                        <TableBody>
+                          {stableSort(
+                            appointmentData,
+                            getComparator(order, tbOrderBy)
+                          )
+                            .slice(
+                              page * rowsPerPage,
+                              page * rowsPerPage + rowsPerPage
+                            )
+                            .map((list, index) => {
+                              console.log(list.status);
+                              return (
+                                <TableRow key={index} tabIndex={-1} hover>
+                                  <TableCell>{count++}</TableCell>
+                                  <TableCell>
+                                    <h1>
+                                      {" "}
+                                      <img
+                                        className="img-avatar w-10 h-10 mr-2 img-avatar-thumb"
+                                        src={
+                                          list.photoURL
+                                            ? list.photoURL
+                                            : Userlogo
+                                        }
+                                      />
+                                      {list.fullname}
+                                    </h1>
+                                  </TableCell>
+                                  <TableCell>{list.gender}</TableCell>
+                                  <TableCell>{list.purpose}</TableCell>
+                                  <TableCell>{list.description}</TableCell>
+                                  <TableCell>
+                                    <Moment format="MMM DD">{list.day}</Moment>
+                                    {", "}
+                                    {list.time}
+                                  </TableCell>
+                                  <TableCell>
+                                    <div className="d-flex justify-content-center gap-3">
+                                      <i
+                                        className="cursor-pointer fa fa-check bg-green-600 text-white p-2"
+                                        onClick={() => approveClick(list)}
+                                      ></i>
+                                      <i
+                                        className="cursor-pointer fa fa-close bg-red-600 text-white p-2"
+                                        onClick={() => declineClick(list)}
+                                      ></i>
+                                    </div>
+                                  </TableCell>
+                                </TableRow>
+                              );
+                            })}
+                          {emptyRows > 0 && (
+                            <TableRow
+                              style={{
+                                height: 53 * emptyRows,
+                              }}
+                            >
+                              <TableCell colSpan={6} />
+                            </TableRow>
+                          )}
+                        </TableBody>
+                      )}
+                    </Table>
+                  </TableContainer>
+                  <TablePagination
+                    rowsPerPageOptions={[5, 10, 25]}
+                    component="div"
+                    count={appointmentData.length}
+                    rowsPerPage={rowsPerPage}
+                    page={page}
+                    onPageChange={handleChangePage}
+                    onRowsPerPageChange={handleChangeRowsPerPage}
+                  />
+                </>
+              )}
+              {type == "approved" && (
+                <>
+                  <TableContainer>
+                    <Table size="medium">
+                      <PageHead
+                        order={order}
+                        orderBy={tbOrderBy}
+                        onRequestSort={handleRequestSort}
+                        headCells={headCells}
+                      />
+                      {loadingAppoint ? (
+                        <div className="h-100 col-12 d-flex text-center justify-content-center">
+                          <p>Loading...</p>
                         </div>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="block block-bordered block-rounded mb-2">
-                    <div
-                      className="block-header bg-primary text-white"
-                      role="tab"
-                      id="accordion_h3"
-                    >
-                      <a
-                        className="font-w600"
-                        data-toggle="collapse"
-                        data-parent="#accordion"
-                        href="#accordion_q3"
-                        aria-expanded="true"
-                        aria-controls="accordion_q3"
-                      >
-                        Completed Appointments
-                      </a>
-                    </div>
-                    <div
-                      id="accordion_q3"
-                      className="collapse"
-                      role="tabpanel"
-                      aria-labelledby="accordion_h3"
-                      data-parent="#accordion"
-                    >
-                      <div className="block-content">
-                        <div style={{ height: "500px" }}>
-                          <table
-                            className="table table-striped table-responsive table-vcenter table-md"
-                            id="appointment_table"
-                          >
-                            <thead>
-                              <tr>
-                                <th>#</th>
-                                <th>Name</th>
-                                <th>Purpose</th>
-                                <th>Description</th>
-                                <th>Date</th>
-                                <th>Status</th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              {loadingAppoint ? (
-                                <tr>
-                                  <td colSpan={5} className="text-center">
-                                    loading...
-                                  </td>
-                                </tr>
-                              ) : (
-                                appointments.docs.map((doc, index) => {
-                                  if (doc.data().status === "Completed") {
-                                    let count = 0;
-                                    return (
-                                      <>
-                                        <tr key={doc.id}>
-                                          <td>{count + 1}</td>
-                                          <td>{doc.data().fullname}</td>
-                                          <td>{doc.data().purpose}</td>
-                                          <td>
-                                            {doc.data().description
-                                              ? doc.data().description
-                                              : "No description added"}
-                                          </td>
-                                          <td>
-                                            <Moment format="MMM DD">
-                                              {doc.data().day}
-                                            </Moment>
-                                            {", "}
-                                            {doc.data().time}
-                                          </td>
-                                          <td>
-                                            <span className="text-success">
-                                              {doc.data().status}
-                                            </span>
-                                          </td>
-                                        </tr>
-                                      </>
-                                    );
-                                  }
-                                })
-                              )}
-                            </tbody>
-                          </table>
+                      ) : (
+                        <TableBody>
+                          {stableSort(
+                            appointmentData,
+                            getComparator(order, tbOrderBy)
+                          )
+                            .slice(
+                              page * rowsPerPage,
+                              page * rowsPerPage + rowsPerPage
+                            )
+                            .map((list, index) => {
+                              console.log(list.status);
+                              return (
+                                <TableRow key={index} tabIndex={-1} hover>
+                                  <TableCell>{count++}</TableCell>
+                                  <TableCell>
+                                    <h1>
+                                      {" "}
+                                      <img
+                                        className="img-avatar w-10 h-10 mr-2 img-avatar-thumb"
+                                        src={
+                                          list.photoURL
+                                            ? list.photoURL
+                                            : Userlogo
+                                        }
+                                      />
+                                      {list.fullname}
+                                    </h1>
+                                  </TableCell>
+                                  <TableCell>{list.gender}</TableCell>
+                                  <TableCell>{list.purpose}</TableCell>
+                                  <TableCell>{list.description}</TableCell>
+                                  <TableCell>
+                                    <Moment format="MMM DD">{list.day}</Moment>
+                                    {", "}
+                                    {list.time}
+                                  </TableCell>
+                                  <TableCell>
+                                    <div
+                                      className="d-flex justify-content-center"
+                                      style={{ cursor: "pointer" }}
+                                      onClick={() => handleOpen(list)}
+                                    >
+                                      <h1 className="bg-green-600 text-white p-2 px-3 mr-3">
+                                        Mark as Complete
+                                      </h1>
+                                    </div>
+                                  </TableCell>
+                                </TableRow>
+                              );
+                            })}
+                          {emptyRows > 0 && (
+                            <TableRow
+                              style={{
+                                height: 53 * emptyRows,
+                              }}
+                            >
+                              <TableCell colSpan={6} />
+                            </TableRow>
+                          )}
+                        </TableBody>
+                      )}
+                    </Table>
+                  </TableContainer>
+                  <TablePagination
+                    rowsPerPageOptions={[5, 10, 25]}
+                    component="div"
+                    count={appointmentData.length}
+                    rowsPerPage={rowsPerPage}
+                    page={page}
+                    onPageChange={handleChangePage}
+                    onRowsPerPageChange={handleChangeRowsPerPage}
+                  />
+                </>
+              )}
+
+              {type == "completed" && (
+                <>
+                  <TableContainer>
+                    <Table size="medium">
+                      <PageHead
+                        order={order}
+                        orderBy={tbOrderBy}
+                        onRequestSort={handleRequestSort}
+                        headCells={headCells}
+                      />
+                      {loadingAppoint ? (
+                        <div className="h-100 col-12 d-flex text-center justify-content-center">
+                          <p>Loading...</p>
                         </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
+                      ) : (
+                        <TableBody>
+                          {stableSort(
+                            appointmentData,
+                            getComparator(order, tbOrderBy)
+                          )
+                            .slice(
+                              page * rowsPerPage,
+                              page * rowsPerPage + rowsPerPage
+                            )
+                            .map((list, index) => {
+                              console.log(list.status);
+                              return (
+                                <TableRow key={index} tabIndex={-1} hover>
+                                  <TableCell>{count++}</TableCell>
+                                  <TableCell>
+                                    <h1>
+                                      {" "}
+                                      <img
+                                        className="img-avatar w-10 h-10 mr-2 img-avatar-thumb"
+                                        src={
+                                          list.photoURL
+                                            ? list.photoURL
+                                            : Userlogo
+                                        }
+                                      />
+                                      {list.fullname}
+                                    </h1>
+                                  </TableCell>
+                                  <TableCell>{list.gender}</TableCell>
+                                  <TableCell>{list.purpose}</TableCell>
+                                  <TableCell>{list.description}</TableCell>
+                                  <TableCell>
+                                    <Moment format="MMM DD">{list.day}</Moment>
+                                    {", "}
+                                    {list.time}
+                                  </TableCell>
+                                  <TableCell>
+                                    <h1 className="bg-success text-center p-1 text-white rounded-xl">
+                                      {list.status}
+                                    </h1>
+                                  </TableCell>
+                                </TableRow>
+                              );
+                            })}
+                          {emptyRows > 0 && (
+                            <TableRow
+                              style={{
+                                height: 53 * emptyRows,
+                              }}
+                            >
+                              <TableCell colSpan={6} />
+                            </TableRow>
+                          )}
+                        </TableBody>
+                      )}
+                    </Table>
+                  </TableContainer>
+                  <TablePagination
+                    rowsPerPageOptions={[5, 10, 25]}
+                    component="div"
+                    count={appointmentData.length}
+                    rowsPerPage={rowsPerPage}
+                    page={page}
+                    onPageChange={handleChangePage}
+                    onRowsPerPageChange={handleChangeRowsPerPage}
+                  />
+                </>
+              )}
             </div>
           </div>
         </main>

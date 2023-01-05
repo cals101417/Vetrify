@@ -3,6 +3,32 @@ import { Link, NavLink } from "react-router-dom";
 import logo from "../assets/img/logo.png";
 import noUserImg from "../assets/img/user.png";
 import { useAuth } from "../auth/context/UserAuthContext";
+import Sideitem from "./Sideitem";
+
+const sidebarItems = [
+  {
+    text: "Appointments",
+    icon: "si si-calendar",
+    children: [
+      {
+        href: "/Appointments/pendings",
+        text: "Pending",
+        icon: "fa fa-cogs",
+      },
+      {
+        href: "/Appointments/approved",
+        text: "Approved",
+        icon: "fa fa-cogs",
+      },
+      {
+        href: "/Appointments/completed",
+        text: "Completed",
+        icon: "fa fa-cogs",
+      },
+    ],
+  },
+];
+
 function Sidebar() {
   const { logout, user } = useAuth();
   const handleLogout = async () => {
@@ -43,7 +69,7 @@ function Sidebar() {
             </div>
           </div>
         </div>
-        <div className="content-side content-side-full content-side-user px-10 align-parent bg-blue-600">
+        <div className="content-side content-side-full content-side-user px-10 align-parent bg-image bg-image-middle bg-gradient-to-r from-cyan-900 to-blue-500">
           <div className="sidebar-mini-visible-b align-v animated fadeIn">
             <img
               className="img-avatar img-avatar32"
@@ -90,12 +116,9 @@ function Sidebar() {
                 <span className="sidebar-mini-hide">Users</span>
               </NavLink>
             </li>
-            <li>
-              <NavLink to="/Appointments">
-                <i className="si si-calendar mt-0.5"></i>
-                <span className="sidebar-mini-hide">Appointments</span>
-              </NavLink>
-            </li>
+            {sidebarItems.map((items, index) => {
+              return <Sideitem key={index} items={items} />;
+            })}
             <li>
               <NavLink to="/History">
                 <i className="fa fa-history mt-0.5"></i>
