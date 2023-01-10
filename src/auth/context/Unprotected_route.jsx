@@ -1,13 +1,19 @@
-import React from 'react';
-import { useAuth } from './UserAuthContext';
-import { Navigate } from 'react-router-dom';
+import React from "react";
+import { useAuth } from "./UserAuthContext";
+import { Navigate } from "react-router-dom";
 
-function Unprotected_route({children}) {
+function Unprotected_route({ children }) {
   const { user, loading } = useAuth();
-    if (loading)
+  if (loading)
     return (
       <>
-        <p>...</p>
+        <div
+          style={{ position: "fixed", zIndex: 1031, top: "50%", left: "50%" }}
+        >
+          <div class="spinner-border text-primary text-center" role="status">
+            <span class="visually-hidden"></span>
+          </div>
+        </div>
       </>
     );
 
@@ -16,7 +22,6 @@ function Unprotected_route({children}) {
   } else {
     return <Navigate to="/Home" />;
   }
-
 }
 
 export default Unprotected_route;

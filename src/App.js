@@ -8,10 +8,12 @@ import Login from "./components/Login";
 import Register from "./components/Register";
 import Home from "./pages/Home";
 import User from "./pages/User";
-import Appointments from "./pages/Appointments";
 import Pets from "./pages/Pets";
 import About from "./pages/About";
 import History from "./pages/History";
+import PendingAppointments from "./pages/Appointments/PendingAppointments";
+import ApproveAppointments from "./pages/Appointments/ApproveAppointments";
+import CompletedAppointments from "./pages/Appointments/CompletedAppointments";
 function App() {
   return (
     <BrowserRouter>
@@ -54,14 +56,33 @@ function App() {
             }
           />
           <Route
-            path="/Appointments/:type"
+            path="/PendingAppointments"
             exact
             element={
               <Protected_route>
-                <Appointments />
+                <PendingAppointments />
               </Protected_route>
             }
           />
+          <Route
+            path="/ApproveAppointments"
+            exact
+            element={
+              <Protected_route>
+                <ApproveAppointments />
+              </Protected_route>
+            }
+          />
+          <Route
+            path="/CompletedAppointments"
+            exact
+            element={
+              <Protected_route>
+                <CompletedAppointments />
+              </Protected_route>
+            }
+          />
+
           <Route
             path="/About"
             exact

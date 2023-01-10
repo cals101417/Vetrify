@@ -11,17 +11,17 @@ const sidebarItems = [
     icon: "si si-calendar",
     children: [
       {
-        href: "/Appointments/pendings",
+        href: "/PendingAppointments",
         text: "Pending",
         icon: "fa fa-cogs",
       },
       {
-        href: "/Appointments/approved",
+        href: "/ApproveAppointments",
         text: "Approved",
         icon: "fa fa-cogs",
       },
       {
-        href: "/Appointments/completed",
+        href: "/CompletedAppointments",
         text: "Completed",
         icon: "fa fa-cogs",
       },
