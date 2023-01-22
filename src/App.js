@@ -11,9 +11,13 @@ import User from "./pages/User";
 import Pets from "./pages/Pets";
 import About from "./pages/About";
 import History from "./pages/History";
-import PendingAppointments from "./pages/Appointments/PendingAppointments";
-import ApproveAppointments from "./pages/Appointments/ApproveAppointments";
-import CompletedAppointments from "./pages/Appointments/CompletedAppointments";
+import PendingAppointments from "./pages/PendingAppointments";
+import ApproveAppointments from "./pages/ApproveAppointments";
+import CompletedAppointments from "./pages/CompletedAppointments";
+import PetsRecord from "./pages/PetsRecord";
+import PetRoute from "./pages/PetRoute";
+import Records from "./pages/Records";
+
 function App() {
   return (
     <BrowserRouter>
@@ -102,11 +106,29 @@ function App() {
             }
           />
           <Route
-            path="/Pets/:petID"
+            path="/Records"
             exact
             element={
               <Protected_route>
-                <Pets />
+                <Records />
+              </Protected_route>
+            }
+          />
+          <Route
+            path="/PetRoute/*"
+            exact
+            element={
+              <Protected_route>
+                <PetRoute />
+              </Protected_route>
+            }
+          />
+          <Route
+            path="/PetsRecord"
+            exact
+            element={
+              <Protected_route>
+                <PetsRecord />
               </Protected_route>
             }
           />

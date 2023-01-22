@@ -87,7 +87,7 @@ function Login() {
                       </div>
                     </div>
                   </div>
-                  <div className="block-content bg-body-light">
+                  {/* <div className="block-content bg-body-light">
                     <div className="form-group text-center">
                       <Link
                         to="/Register"
@@ -102,7 +102,7 @@ function Login() {
                         <i className="fa fa-warning mr-5"></i> Forgot Password
                       </a>
                     </div>
-                  </div>
+                  </div> */}
                 </div>
               </form>
             </div>

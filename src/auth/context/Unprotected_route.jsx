@@ -17,10 +17,10 @@ function Unprotected_route({ children }) {
       </>
     );
 
-  if (!user) {
-    return <>{children}</>;
-  } else {
+  if (user) {
     return <Navigate to="/Home" />;
+  } else {
+    return <>{children}</>;
   }
 }
 

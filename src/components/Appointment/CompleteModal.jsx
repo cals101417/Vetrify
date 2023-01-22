@@ -20,8 +20,10 @@ import {
   updateDoc,
 } from "firebase/firestore";
 import { db } from "../../auth/firebase";
+import { useAuth } from "../../auth/context/UserAuthContext";
 
 const CompleteModal = ({ open, close, data, pets_data }) => {
+  const { user, loading } = useAuth();
   const [input, setInput] = useState(() =>
     data.petIds.reduce((acc, curr) => {
       const pet = pets_data.docs.find((p) => p.id === curr);
@@ -56,9 +58,13 @@ const CompleteModal = ({ open, close, data, pets_data }) => {
     const promisesRecords = Object.entries(input).map(([key, val]) =>
       addDoc(medicalHistoryRef, {
         petId: key,
+        doctorsInfo: user.firstname,
         appointment_id: data.id,
         symptoms: val?.symptoms || "",
+        description: val?.description || "",
+        weight: val?.weight || "",
         diagnosis: val?.diagnosis || "",
+        status: val?.status || "",
         physical_exam: val?.physical_exam || "",
         type: data.purpose,
         dateCompleted: data.day,

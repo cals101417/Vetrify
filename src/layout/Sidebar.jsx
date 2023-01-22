@@ -83,12 +83,9 @@ function Sidebar() {
             </a>
             <ul className="list-inline mt-10">
               <li className="list-inline-item">
-                <Link
-                  to="profile"
-                  className="link-effect text-white font-size-xs font-w600 text-uppercase"
-                >
-                  {user.firstname} {user.lastname}
-                </Link>
+                <a className="link-effect text-white font-size-xs font-w600 text-uppercase">
+                  {user.firstname}
+                </a>
               </li>
               <li className="list-inline-item">
                 <a className="link-effect text-white">
@@ -105,31 +102,44 @@ function Sidebar() {
           <ul className="nav-main">
             <br></br>
             <li>
-              <NavLink to="/Home" activeclassname="selected">
+              <Link to="/Home" activeclassname="selected">
                 <i className="fa fa-dashboard mt-0.5"></i>
                 <span className="sidebar-mini-hide">Dashboard</span>
-              </NavLink>
+              </Link>
             </li>
+
             <li>
-              <NavLink to="/Users">
+              <Link to="/Users">
                 <i className="si si-puzzle mt-0.5"></i>
                 <span className="sidebar-mini-hide">Users</span>
-              </NavLink>
+              </Link>
+            </li>
+            <li>
+              <Link to="/PetsRecord">
+                <i className="fa fa-paw mt-0.5"></i>
+                <span className="sidebar-mini-hide">Pets</span>
+              </Link>
             </li>
             {sidebarItems.map((items, index) => {
               return <Sideitem key={index} items={items} />;
             })}
             <li>
-              <NavLink to="/History">
-                <i className="fa fa-history mt-0.5"></i>
-                <span className="sidebar-mini-hide">History</span>
-              </NavLink>
+              <Link to="/Records">
+                <i className="fa fa-file mt-0.5"></i>
+                <span className="sidebar-mini-hide">Records</span>
+              </Link>
             </li>
             <li>
-              <NavLink to="/About">
+              <Link to="/History">
+                <i className="fa fa-history mt-0.5"></i>
+                <span className="sidebar-mini-hide">History</span>
+              </Link>
+            </li>
+            <li>
+              <Link to="/About">
                 <i className="fa fa-info-circle mt-0.5"></i>
                 <span className="sidebar-mini-hide">About</span>
-              </NavLink>
+              </Link>
             </li>
           </ul>
         </div>

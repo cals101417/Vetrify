@@ -68,7 +68,7 @@ const headCells = [
   },
 ];
 
-const Records = () => {
+const PetsRecord = () => {
   const petCollectionRef = collection(db, "pets");
   const petQuery = query(petCollectionRef, orderBy("createdAt", "desc"));
   const navigate = useNavigate();
@@ -143,6 +143,13 @@ const Records = () => {
   const emptyRows =
     page > 0 ? Math.max(0, (1 + page) * rowsPerPage - petDetails.length) : 0;
 
+  const handleOpenDetails = async (ownerId) => {
+    const getUsers = await getDoc(doc(db, "users", ownerId));
+    setUserMOdalDetails(getUsers.data());
+    handleAppointments(ownerId);
+    handleClick(ownerId);
+  };
+
   // get selected data to appointments in modal
   const handleAppointments = async (id) => {
     const appointmentsCollectionRef = collection(db, "appointments");
@@ -159,6 +166,13 @@ const Records = () => {
     const pets = await getDocs(q);
     setSelectedpets(pets.docs);
     setLoadingPets(false);
+  };
+
+  const handleCloseMOdal = (e) => {
+    e.preventDefault();
+    setUserMOdalDetails("");
+    handleAppointments("");
+    handleClick("");
   };
 
   return (
@@ -228,6 +242,16 @@ const Records = () => {
 
                               <TableCell>
                                 <div className="d-flex justify-content-center">
+                                  <button
+                                    className="text-white bg-success p-2 rounded-lg mr-2"
+                                    onClick={() =>
+                                      handleOpenDetails(pets.ownerId)
+                                    }
+                                    data-toggle="modal"
+                                    data-target="#owner_modal"
+                                  >
+                                    Owner Info
+                                  </button>
                                   <Link
                                     to={`/PetRoute/${pets.id}`}
                                     className="text-white bg-primary p-2 rounded-lg"
@@ -266,9 +290,87 @@ const Records = () => {
             </div>
           </div>
         </div>
+        {/* Owner modal */}
+        <div
+          className="modal fade"
+          id="owner_modal"
+          tabIndex="-1"
+          role="dialog"
+          aria-labelledby="add_attendance_modal"
+          aria-hidden="true"
+        >
+          <div className="modal-dialog modal-lg" role="document">
+            <div className="modal-content">
+              <div className="block block-themed block-transparent mb-0">
+                <div className="block-header bg-dark">
+                  <h3 className="block-title text-white font-bold">
+                    Pet Owner
+                  </h3>
+                  <div className="block-options">
+                    <button
+                      type="button"
+                      className="btn-block-option"
+                      onClick={handleCloseMOdal}
+                      data-dismiss="modal"
+                      aria-label="Close"
+                    >
+                      <i className="si si-close text-white font-bold"></i>
+                    </button>
+                  </div>
+                </div>
+                <div className="table-responsive px-20 py-20">
+                  <div className="col-md-12 col-xl-12 cursor-pointer">
+                    <a href="/Users" className="block text-center">
+                      <div className="block-content block-content-full bg-gradient-to-r from-cyan-900 to-blue-500">
+                        <div>
+                          <img
+                            className="img-avatar img-avatar-thumb"
+                            src={Userlogo}
+                          />
+                        </div>
+                        <div className="mt-2 text-white font-bold text-lg">
+                          {userMOdalDetails.firstname}{" "}
+                          {userMOdalDetails.lastname}
+                        </div>
+                        <div className="mt-1 text-white text-md">
+                          {userMOdalDetails.email}
+                        </div>
+                      </div>
+
+                      <div className="block-content block-content-full d-flex justify-content-around bg-body-light">
+                        <div className="font-w600 mb-5">
+                          {" "}
+                          <div className="font-size-h2 text-info font-w700">
+                            {selectedAppointments.length}
+                          </div>
+                          <div className="font-size-sm font-w600  text-uppercase text-muted">
+                            <h1 className="text-xs">Total Appointments</h1>
+                          </div>
+                        </div>
+                        <div className="font-size-sm text-muted">
+                          {" "}
+                          <div className="font-w600 mb-5">
+                            {" "}
+                            <div className="font-size-h2 text-warning font-w700">
+                              {selectedPets.length}
+                            </div>
+                            <div className=" font-w600  text-uppercase text-muted">
+                              <h1 className="text-xs">Total Added Pets</h1>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </a>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        {/* END User modal */}
       </main>
     </div>
   );
 };
 
-export default Records;
+export default PetsRecord;

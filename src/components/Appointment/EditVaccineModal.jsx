@@ -22,8 +22,7 @@ import {
 import { db } from "../../auth/firebase";
 import { useAuth } from "../../auth/context/UserAuthContext";
 
-const CompleteVaccineModal = ({ open, close, data }) => {
-  const { user, loading } = useAuth();
+const EditVaccineModal = ({ open, close, data }) => {
   const [weight, setWeight] = useState();
   const [vaccineType, setVaccineType] = useState();
   const [vaccineBrand, setVaccineBrand] = useState();
@@ -32,37 +31,25 @@ const CompleteVaccineModal = ({ open, close, data }) => {
 
   const handleSumit = async (e) => {
     e.preventDefault();
-    if (window.confirm("Are you Sure to Complete this Appointment?")) {
-      const aptPets = data.petIds.map((petId) => {
-        return addDoc(collection(db, "vaccine_records"), {
-          petId,
-          dateComplete: data.day,
-          doctorsInfo: user.firstname,
-          weight: weight,
-          vaccineType: vaccineType,
-          vaccineBrand: vaccineBrand,
-          treatment: treatment,
-          doctorsNotation: doctorsNotation,
-          appointment_id: data.id,
-          createdAt: serverTimestamp(),
-        });
-      });
-
-      await Promise.all(aptPets);
-      await updateDoc(doc(db, "appointments", data.id), {
-        status: "Completed",
+    if (window.confirm("Confirm to Submit edited details?")) {
+      await updateDoc(doc(db, "vaccine_records", data.id), {
+        weight: weight ? weight : data.data().weight,
+        vaccineType: vaccineType ? vaccineType : data.data().vaccineType,
+        vaccineBrand: vaccineBrand ? vaccineBrand : data.data().vaccineBrand,
+        treatment: treatment ? treatment : data.data().treatment,
+        doctorsNotation: doctorsNotation
+          ? doctorsNotation
+          : data.data().doctorsNotation,
       });
       window.location.reload();
     }
   };
-  const handleReload = () => {
-    window.location.reload();
-  };
+
   return (
-    <Dialog open={open} onClose={close} fullWidth maxWidth="sm">
+    <Dialog open={open} fullWidth maxWidth="sm">
       <DialogTitle className="d-flex justify-content-between">
-        <h1>Complete Appointment</h1>
-        <li className="fa fa-close cursor-pointer" onClick={handleReload}></li>
+        <h1>Edit Vaccine Details</h1>
+        <li className="fa fa-close cursor-pointer" onClick={close}></li>
       </DialogTitle>
       <DialogContent>
         <form sx={{ height: "10px" }} onSubmit={handleSumit}>
@@ -74,7 +61,7 @@ const CompleteVaccineModal = ({ open, close, data }) => {
                 id="symptoms-select"
                 label="Select Type of Vaccine"
                 name="vaccine_type"
-                value={vaccineType}
+                value={vaccineType ? vaccineType : data.data().vaccineType}
                 onChange={(e) => setVaccineType(e.target.value)}
                 inputProps={{ required: true }}
               >
@@ -98,8 +85,9 @@ const CompleteVaccineModal = ({ open, close, data }) => {
               <TextField
                 id="treatment"
                 label="Treatment"
+                InputLabelProps={{ shrink: true }}
                 name="treatment"
-                value={treatment}
+                value={treatment ? treatment : data.data().treatment}
                 onChange={(e) => setTreatment(e.target.value)}
                 inputProps={{ required: true }}
               />
@@ -108,18 +96,20 @@ const CompleteVaccineModal = ({ open, close, data }) => {
               <div className="d-flex  justify-content-between">
                 <TextField
                   id="weight"
-                  label="weight"
+                  label="Weight"
+                  InputLabelProps={{ shrink: true }}
                   name="weight"
-                  value={weight}
+                  value={weight ? weight : data.data().weight}
                   onChange={(e) => setWeight(e.target.value)}
                   sx={{ width: "45%" }}
                   inputProps={{ required: true }}
                 />
                 <TextField
                   id="vaccine_brand"
-                  label="Brand of the Vaccine"
+                  label="Vaccine Brand"
+                  InputLabelProps={{ shrink: true }}
                   name="vaccine_brand"
-                  value={vaccineBrand}
+                  value={vaccineBrand ? vaccineBrand : data.data().vaccineBrand}
                   sx={{ width: "45%" }}
                   onChange={(e) => setVaccineBrand(e.target.value)}
                   inputProps={{ required: true }}
@@ -129,9 +119,14 @@ const CompleteVaccineModal = ({ open, close, data }) => {
             <FormControl fullWidth margin="normal">
               <TextField
                 id="doctor_notation"
-                label="Doctor's Notation"
                 name="doctor_notation"
-                value={doctorsNotation}
+                label="Doctors Notation"
+                InputLabelProps={{ shrink: true }}
+                value={
+                  doctorsNotation
+                    ? doctorsNotation
+                    : data.data().doctorsNotation
+                }
                 onChange={(e) => setDoctorsNotation(e.target.value)}
                 multiline
                 rows={5}
@@ -154,4 +149,4 @@ const CompleteVaccineModal = ({ open, close, data }) => {
   );
 };
 
-export default CompleteVaccineModal;
+export default EditVaccineModal;

@@ -5,7 +5,7 @@ import Pawlogo from "../assets/img/paw.png";
 import { collection, doc, getDoc, query, where } from "firebase/firestore";
 import { db } from "../auth/firebase";
 import { useCollection } from "react-firebase-hooks/firestore";
-import { useNavigate } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 function Home() {
   const [totalUser, setTotalUser] = useState([]);
   const navigate = useNavigate();
@@ -112,11 +112,11 @@ function Home() {
             </div>
             <div className="row gutters-tiny pt-20">
               <div className="col-md-6 col-xl-8 cursor-pointer">
-                <a className="block block-link-shadow">
-                  <div
-                    className="block-content block-content-full"
-                    onClick={navigateAppointments}
-                  >
+                <NavLink
+                  to="/PendingAppointments"
+                  className="block block-link-shadow"
+                >
+                  <div className="block-content block-content-full">
                     <div
                       className="table-responsive px-20"
                       style={{ height: "650px", paddingTop: "10px" }}
@@ -170,10 +170,13 @@ function Home() {
                       </table>
                     </div>
                   </div>
-                </a>
+                </NavLink>
               </div>
               <div className="col-md-6 col-xl-4">
-                <a className="block block-link-shadow">
+                <NavLink
+                  to="/PendingAppointments"
+                  className="block block-link-shadow"
+                >
                   <div
                     className="block-content block-content-full cursor-pointer"
                     onClick={navigateAppointments}
@@ -217,7 +220,7 @@ function Home() {
                       </table>
                     </div>
                   </div>
-                </a>
+                </NavLink>
               </div>
             </div>
           </div>

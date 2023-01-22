@@ -48,11 +48,25 @@ function Header() {
                 Users
               </NavLink>
               <NavLink
-                to="/Appointments"
+                to="/PendingAppointments"
                 className="dropdown-item cursor-pointer"
               >
-                <i className="si si-calendar mr-5"></i>
-                Appointments
+                <i className="si si-calendar bg-dark mr-5"></i>
+                Pending Appointments
+              </NavLink>
+              <NavLink
+                to="/ApproveAppointments"
+                className="dropdown-item cursor-pointer"
+              >
+                <i className="si si-calendar bg-warning mr-5"></i>
+                Approve Appointments
+              </NavLink>
+              <NavLink
+                to="/CompletedAppointments"
+                className="dropdown-item cursor-pointer"
+              >
+                <i className="si si-calendar bg-success mr-5"></i>
+                Completed Appointments
               </NavLink>
               <NavLink to="/History" className="dropdown-item cursor-pointer">
                 <i className="fa fa-history mr-5"></i>

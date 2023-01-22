@@ -1,25 +1,20 @@
 import React, { useState } from "react";
-import Sidebar from "../../layout/Sidebar";
-import Header from "../../layout/Header";
+import Sidebar from "../layout/Sidebar";
+import Header from "../layout/Header";
 import {
-  addDoc,
   collection,
   doc,
   getDoc,
   onSnapshot,
   query,
-  serverTimestamp,
   updateDoc,
   where,
 } from "firebase/firestore";
 import { useCollection } from "react-firebase-hooks/firestore";
-import { db } from "../../auth/firebase";
+import { db } from "../auth/firebase";
 import Moment from "react-moment";
-import CompleteModal from "../../components/Appointment/CompleteModal";
 import moment from "moment/moment";
-import axiosInstance from "../../utils/axiosConfig";
-import CompleteVaccineModal from "../../components/Appointment/CompleteVaccineModal";
-import { useParams } from "react-router-dom";
+import axiosInstance from "../utils/axiosConfig";
 import {
   Table,
   TableBody,
@@ -28,10 +23,10 @@ import {
   TablePagination,
   TableRow,
 } from "@mui/material";
-import PageHead from "../../components/Table/PageHead";
-import PageToolbar from "../../components/Table/PageToolbar";
-import Userlogo from "../../assets/img/user.png";
-import { getComparator, stableSort } from "../../utils/tableUtils";
+import PageHead from "../components/Table/PageHead";
+import PageToolbar from "../components/Table/PageToolbar";
+import Userlogo from "../assets/img/user.png";
+import { getComparator, stableSort } from "../utils/tableUtils";
 import { useEffect } from "react";
 
 const headCells = [
@@ -45,8 +40,8 @@ const headCells = [
     sortable: true,
   },
   {
-    id: "gender",
-    label: "Gender",
+    id: "petName",
+    label: "Name of Pet",
     sortable: true,
   },
   {
@@ -242,8 +237,16 @@ const PendingAppointments = () => {
                                   {list.fullname}
                                 </h1>
                               </TableCell>
-                              <TableCell>{list.gender}</TableCell>
-                              <TableCell>{list.purpose}</TableCell>
+                              <TableCell>{list.petName}</TableCell>
+                              <TableCell>
+                                {list.purpose.map((item, index) => {
+                                  if (item.length > 1) {
+                                    return (index ? " & " : "") + item;
+                                  } else {
+                                    return item;
+                                  }
+                                })}
+                              </TableCell>
                               <TableCell>{list.description}</TableCell>
                               <TableCell>
                                 <Moment format="MMM DD">{list.day}</Moment>

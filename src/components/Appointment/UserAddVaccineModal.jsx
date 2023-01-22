@@ -21,8 +21,9 @@ import {
 } from "firebase/firestore";
 import { db } from "../../auth/firebase";
 import { useAuth } from "../../auth/context/UserAuthContext";
+import moment from "moment/moment";
 
-const CompleteVaccineModal = ({ open, close, data }) => {
+const UserAddVaccineModal = ({ open, close, data }) => {
   const { user, loading } = useAuth();
   const [weight, setWeight] = useState();
   const [vaccineType, setVaccineType] = useState();
@@ -32,37 +33,28 @@ const CompleteVaccineModal = ({ open, close, data }) => {
 
   const handleSumit = async (e) => {
     e.preventDefault();
-    if (window.confirm("Are you Sure to Complete this Appointment?")) {
-      const aptPets = data.petIds.map((petId) => {
-        return addDoc(collection(db, "vaccine_records"), {
-          petId,
-          dateComplete: data.day,
-          doctorsInfo: user.firstname,
-          weight: weight,
-          vaccineType: vaccineType,
-          vaccineBrand: vaccineBrand,
-          treatment: treatment,
-          doctorsNotation: doctorsNotation,
-          appointment_id: data.id,
-          createdAt: serverTimestamp(),
-        });
+    if (window.confirm("Are you Sure to Submit this Appointment?")) {
+      addDoc(collection(db, "vaccine_records"), {
+        petId: data,
+        dateComplete: moment().format("MMM dd, yyyy"),
+        doctorsInfo: user.firstname,
+        weight: weight,
+        vaccineType: vaccineType,
+        vaccineBrand: vaccineBrand,
+        treatment: treatment,
+        doctorsNotation: doctorsNotation,
+        addedRecord: 1,
+        createdAt: serverTimestamp(),
       });
 
-      await Promise.all(aptPets);
-      await updateDoc(doc(db, "appointments", data.id), {
-        status: "Completed",
-      });
       window.location.reload();
     }
   };
-  const handleReload = () => {
-    window.location.reload();
-  };
   return (
-    <Dialog open={open} onClose={close} fullWidth maxWidth="sm">
+    <Dialog open={open} fullWidth maxWidth="sm">
       <DialogTitle className="d-flex justify-content-between">
         <h1>Complete Appointment</h1>
-        <li className="fa fa-close cursor-pointer" onClick={handleReload}></li>
+        <li className="fa fa-close cursor-pointer" onClick={close}></li>
       </DialogTitle>
       <DialogContent>
         <form sx={{ height: "10px" }} onSubmit={handleSumit}>
@@ -154,4 +146,4 @@ const CompleteVaccineModal = ({ open, close, data }) => {
   );
 };
 
-export default CompleteVaccineModal;
+export default UserAddVaccineModal;

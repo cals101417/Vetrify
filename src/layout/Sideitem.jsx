@@ -1,6 +1,7 @@
 import { isHostComponent } from "@mui/base";
 import React from "react";
 import { useState } from "react";
+import { Link, NavLink } from "react-router-dom";
 
 const Sideitem = ({ items }) => {
   const { name, links, open } = items;
@@ -30,13 +31,10 @@ const Sideitem = ({ items }) => {
                 key={index}
                 style={{ paddingLeft: "12px" }}
               >
-                <a
-                  className="{{ request()->is('dashboard') ? ' active' : '' }}"
-                  href={link.href}
-                >
+                <Link to={link.href}>
                   <i style={{ color: "#fc1414" }}></i>
                   <span className="sidebar-mini-hide">{link.text}</span>
-                </a>
+                </Link>
               </li>
             </>
           );

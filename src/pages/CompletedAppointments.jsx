@@ -1,21 +1,18 @@
 import React, { useState } from "react";
-import Sidebar from "../../layout/Sidebar";
-import Header from "../../layout/Header";
+import Sidebar from "../layout/Sidebar";
+import Header from "../layout/Header";
 import {
-  addDoc,
   collection,
-  doc,
   onSnapshot,
+  orderBy,
   query,
-  serverTimestamp,
-  updateDoc,
   where,
 } from "firebase/firestore";
 import { useCollection } from "react-firebase-hooks/firestore";
-import { db } from "../../auth/firebase";
+import { db } from "../auth/firebase";
 import Moment from "react-moment";
-import CompleteModal from "../../components/Appointment/CompleteModal";
-import CompleteVaccineModal from "../../components/Appointment/CompleteVaccineModal";
+import CompleteModal from "../components/Appointment/CompleteModal";
+import CompleteVaccineModal from "../components/Appointment/CompleteVaccineModal";
 import {
   Table,
   TableBody,
@@ -24,10 +21,10 @@ import {
   TablePagination,
   TableRow,
 } from "@mui/material";
-import PageHead from "../../components/Table/PageHead";
-import PageToolbar from "../../components/Table/PageToolbar";
-import Userlogo from "../../assets/img/user.png";
-import { getComparator, stableSort } from "../../utils/tableUtils";
+import PageHead from "../components/Table/PageHead";
+import PageToolbar from "../components/Table/PageToolbar";
+import Userlogo from "../assets/img/user.png";
+import { getComparator, stableSort } from "../utils/tableUtils";
 import { useEffect } from "react";
 
 const headCells = [
@@ -41,8 +38,8 @@ const headCells = [
     sortable: true,
   },
   {
-    id: "gender",
-    label: "Gender",
+    id: "petName",
+    label: "Name of Pet",
     sortable: true,
   },
   {
@@ -66,30 +63,27 @@ const headCells = [
   },
 ];
 
-const ApproveAppointments = () => {
-  const [open, setOpen] = useState(false);
-  const [openVaccine, setOpenVaccine] = useState(false);
+function CompletedAppointments() {
   const [order, setOrder] = useState("asc");
   const [tbOrderBy, setTbOrderBy] = useState("calories");
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
-  const [selectedApprove, setSelectedApprove] = useState(null);
   const [appointmentData, setAppointmentData] = useState([]);
   const [filterAppointmentData, setFilterAppointmentData] = useState([]);
   const appointmentsCollectionRef = collection(db, "appointments");
-  const petsCollectionRef = collection(db, "pets");
   const appointmentsQuery = query(
     appointmentsCollectionRef,
     where("status", "!=", "Deleted")
   );
   let count = 1;
   const [appointments, loadingAppoint] = useCollection(appointmentsQuery);
-  const [pets] = useCollection(petsCollectionRef);
+
+  // Fetch Appointments Data
   useEffect(() => {
     async function getUsers() {
       const q = query(
         appointmentsCollectionRef,
-        where("status", "==", "Approved")
+        where("status", "==", "Completed")
       );
       const unsubscribe = onSnapshot(q, (querySnapshot) => {
         const result = [];
@@ -142,38 +136,6 @@ const ApproveAppointments = () => {
       ? Math.max(0, (1 + page) * rowsPerPage - appointmentData.length)
       : 0;
 
-  const handleOpen = async (apt) => {
-    setSelectedApprove({ ...apt, id: apt.id });
-    if (apt.purpose === "Groom") {
-      markGroomAsCompleted(apt);
-    } else if (apt.purpose === "Vaccine") {
-      setOpenVaccine(true);
-    } else {
-      setOpen(true);
-    }
-  };
-
-  const markGroomAsCompleted = async (apt) => {
-    if (window.confirm("Mark Groom as Done?")) {
-      const aptPets = apt.petIds.map((petId) => {
-        return addDoc(collection(db, "groom_records"), {
-          petId,
-          dateGroomed: apt.day,
-          appointment_id: apt.id,
-          createdAt: serverTimestamp(),
-        });
-      });
-      await Promise.all(aptPets);
-      await updateDoc(doc(db, "appointments", apt.id), {
-        status: "Completed",
-      });
-    }
-  };
-
-  const handleClose = () => {
-    setOpen(false);
-  };
-
   return (
     <>
       <div
@@ -185,7 +147,7 @@ const ApproveAppointments = () => {
         <main id="main-container">
           <div className="content">
             <div className="content-header d-flex justify-content-between">
-              <h1 className="font-bold">Approve Bookings</h1>
+              <h1 className="font-bold">Completed Bookings</h1>
               <PageToolbar handleSearch={handleFilter} />
             </div>
             <div className="block">
@@ -228,8 +190,16 @@ const ApproveAppointments = () => {
                                   {list.fullname}
                                 </h1>
                               </TableCell>
-                              <TableCell>{list.gender}</TableCell>
-                              <TableCell>{list.purpose}</TableCell>
+                              <TableCell>{list.petName}</TableCell>
+                              <TableCell>
+                                {list.purpose.map((item, index) => {
+                                  if (item.length > 1) {
+                                    return (index ? " & " : "") + item;
+                                  } else {
+                                    return item;
+                                  }
+                                })}
+                              </TableCell>
                               <TableCell>{list.description}</TableCell>
                               <TableCell>
                                 <Moment format="MMM DD">{list.day}</Moment>
@@ -237,15 +207,9 @@ const ApproveAppointments = () => {
                                 {list.time}
                               </TableCell>
                               <TableCell>
-                                <div
-                                  className="d-flex justify-content-center"
-                                  style={{ cursor: "pointer" }}
-                                  onClick={() => handleOpen(list)}
-                                >
-                                  <h1 className="bg-green-600 text-white p-2 px-3 mr-3">
-                                    Mark as Complete
-                                  </h1>
-                                </div>
+                                <h1 className="bg-success text-center p-1 text-white rounded-xl">
+                                  {list.status}
+                                </h1>
                               </TableCell>
                             </TableRow>
                           );
@@ -276,24 +240,8 @@ const ApproveAppointments = () => {
           </div>
         </main>
       </div>
-      {open && (
-        <CompleteModal
-          open={open}
-          close={handleClose}
-          data={selectedApprove}
-          pets_data={pets}
-        />
-      )}
-
-      {openVaccine && (
-        <CompleteVaccineModal
-          open={openVaccine}
-          close={handleClose}
-          data={selectedApprove}
-        />
-      )}
     </>
   );
-};
+}
 
-export default ApproveAppointments;
+export default CompletedAppointments;
