@@ -61,9 +61,11 @@ export function AuthProvider({ children }) {
       where("email", "==", email)
     );
     const snapshot = await getDocs(userQuery);
-    const isAdmin = snapshot.docs.some((d) => d.data().role === "admin");
+    const isAdmin = snapshot.docs.some(
+      (d) => d.data().role === "admin" || d.data().role === "Staff"
+    );
     if (!isAdmin) {
-      alert("User is not an admin");
+      alert("User is not an admin or staff member");
       return;
     }
 
