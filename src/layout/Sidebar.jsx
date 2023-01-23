@@ -1,4 +1,5 @@
-import React from "react";
+import React, { useState } from "react";
+import { useEffect } from "react";
 import { Link, NavLink } from "react-router-dom";
 import logo from "../assets/img/logo.png";
 import noUserImg from "../assets/img/user.png";
@@ -6,6 +7,56 @@ import { useAuth } from "../auth/context/UserAuthContext";
 import Sideitem from "./Sideitem";
 
 const sidebarItems = [
+  {
+    text: "Users",
+    icon: "fa fa-users",
+    children: [
+      {
+        href: "/Users",
+        text: "Clients",
+        icon: "fa fa-cogs",
+      },
+      {
+        href: "/Staffs",
+        text: "Staffs",
+        icon: "fa fa-cogs",
+      },
+    ],
+  },
+  {
+    text: "Appointments",
+    icon: "si si-calendar",
+    children: [
+      {
+        href: "/PendingAppointments",
+        text: "Pending",
+        icon: "fa fa-cogs",
+      },
+      {
+        href: "/ApproveAppointments",
+        text: "Approved",
+        icon: "fa fa-cogs",
+      },
+      {
+        href: "/CompletedAppointments",
+        text: "Completed",
+        icon: "fa fa-cogs",
+      },
+    ],
+  },
+];
+const sidebarItemsStaff = [
+  {
+    text: "Users",
+    icon: "fa fa-users",
+    children: [
+      {
+        href: "/Users",
+        text: "Clients",
+        icon: "fa fa-cogs",
+      },
+    ],
+  },
   {
     text: "Appointments",
     icon: "si si-calendar",
@@ -31,6 +82,7 @@ const sidebarItems = [
 
 function Sidebar() {
   const { logout, user } = useAuth();
+  const [sidebar, setSidebar] = useState([]);
   const handleLogout = async () => {
     try {
       await logout();
@@ -38,7 +90,17 @@ function Sidebar() {
       console.log(error);
     }
   };
+  useEffect(() => {
+    handleSidebar(user.role);
+  }, [user.role]);
 
+  const handleSidebar = (role) => {
+    if (role == "admin") {
+      setSidebar(sidebarItems);
+    } else {
+      setSidebar(sidebarItemsStaff);
+    }
+  };
   return (
     <nav id="sidebar">
       <div className="sidebar-content">
@@ -108,22 +170,16 @@ function Sidebar() {
               </Link>
             </li>
 
-            <li>
-              <Link to="/Users">
-                <i className="si si-puzzle mt-0.5"></i>
-                <span className="sidebar-mini-hide">Users</span>
-              </Link>
-            </li>
-            <li>
-              <Link to="/PetsRecord">
-                <i className="fa fa-paw mt-0.5"></i>
-                <span className="sidebar-mini-hide">Pets</span>
-              </Link>
-            </li>
-            {sidebarItems.map((items, index) => {
+            {sidebar.map((items, index) => {
               return <Sideitem key={index} items={items} />;
             })}
             <li>
+              <li>
+                <Link to="/PetsRecord">
+                  <i className="fa fa-paw mt-0.5"></i>
+                  <span className="sidebar-mini-hide">Pets</span>
+                </Link>
+              </li>
               <Link to="/Records">
                 <i className="fa fa-file mt-0.5"></i>
                 <span className="sidebar-mini-hide">Records</span>

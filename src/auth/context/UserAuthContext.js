@@ -34,28 +34,24 @@ export function AuthProvider({ children }) {
       setLoading(false);
     }, 3000);
   });
-  const signup = async (email, password, firstname, lastname) => {
-    const signedUpUser = await createUserWithEmailAndPassword(
-      auth,
-      email,
-      password
-    );
+  const signup = (email, password, firstname, lastname) => {
+    const signedUpUser = auth.createUserWithEmailAndPassword(email, password);
     const newUser = {
       email,
       firstname,
       lastname,
       role: "admin",
-      online: true,
+      online: false,
       photoURL: "",
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
     };
-    await setDoc(doc(db, "users", signedUpUser.user.uid), newUser);
-    setUser({
-      ...newUser,
-      createdAt: new Date().toISOString(),
-      uid: signedUpUser.user.uid,
-    });
+    setDoc(doc(db, "users", signedUpUser.user.uid), newUser);
+    // setUser({
+    //   ...newUser,
+    //   createdAt: new Date().toISOString(),
+    //   uid: signedUpUser.user.uid,
+    // });
     return signedUpUser;
   };
 

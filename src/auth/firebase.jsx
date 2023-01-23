@@ -11,13 +11,14 @@ const firebaseConfig = {
   messagingSenderId: "1007809710621",
   appId: "1:1007809710621:web:8f76aa6590a7a8cbae94f4",
 };
-
+const secondaryApp = initializeApp(firebaseConfig, "Secondary");
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
+const createUserAuth = getAuth(secondaryApp);
 const db = getFirestore(app);
 const storage = getStorage(app);
 
-export { auth, db, storage };
+export { auth, createUserAuth, db, storage };
 // export const bookingsCollection = collection(db, "bookings");
 export default app;
 

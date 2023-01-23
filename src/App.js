@@ -17,6 +17,7 @@ import CompletedAppointments from "./pages/CompletedAppointments";
 import PetsRecord from "./pages/PetsRecord";
 import PetRoute from "./pages/PetRoute";
 import Records from "./pages/Records";
+import Staffs from "./pages/Staffs";
 
 function App() {
   return (
@@ -56,6 +57,15 @@ function App() {
             element={
               <Protected_route>
                 <User />
+              </Protected_route>
+            }
+          />
+          <Route
+            path="/Staffs"
+            exact
+            element={
+              <Protected_route>
+                <Staffs />
               </Protected_route>
             }
           />
