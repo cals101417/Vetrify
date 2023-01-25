@@ -32,6 +32,7 @@ import { Link, NavLink, useNavigate } from "react-router-dom";
 import PetsModal from "../components/Appointment/PetsModal";
 import UserPetModal from "../components/Appointment/UserPetModal";
 import AddStaffModal from "../components/Appointment/AddStaffModal";
+import EditStaffModal from "../components/Appointment/EditStaffModal";
 
 const headCells = [
   {
@@ -73,7 +74,9 @@ function Staffs() {
   const navigate = useNavigate();
   const [users, loading] = useCollection(userQuery);
   const [userDetails, setUserDetails] = useState([]);
+  const [editStaffData, setEditStaffData] = useState([]);
   const [openStaff, setOpenStaff] = useState(false);
+  const [editOpenStaff, setEditOpenStaff] = useState(false);
   const [filteredUserDetails, setFilteredUserDetails] = useState([]);
   const [order, setOrder] = useState("asc");
   const [tbOrderBy, setTbOrderBy] = useState("calories");
@@ -149,6 +152,15 @@ function Staffs() {
       }
     }
   };
+
+  const handleEditStaff = (users) => {
+    setEditStaffData(users);
+    setEditOpenStaff(true);
+  };
+
+  const handleCloseEditStaff = () => {
+    setEditOpenStaff(false);
+  };
   return (
     <div
       id="page-container"
@@ -223,6 +235,14 @@ function Staffs() {
                               <TableCell>
                                 <div className="d-flex justify-content-center">
                                   <button
+                                    className="text-white  mr-2"
+                                    onClick={() => handleEditStaff(users)}
+                                    data-toggle="modal"
+                                    data-target="#edit_user_modal"
+                                  >
+                                    <li className="fa fa-pencil bg-success p-2"></li>
+                                  </button>
+                                  <button
                                     className="text-white"
                                     onClick={() => handleDeleteStaff(users)}
                                     data-toggle="modal"
@@ -262,6 +282,11 @@ function Staffs() {
         </div>
       </main>
       <AddStaffModal open={openStaff} close={handleCloseStaff} />
+      <EditStaffModal
+        open={editOpenStaff}
+        close={handleCloseEditStaff}
+        data={editStaffData}
+      />
     </div>
   );
 }

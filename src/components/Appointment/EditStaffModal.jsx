@@ -13,6 +13,7 @@ import {
   serverTimestamp,
   setDoc,
   doc,
+  updateDoc,
 } from "firebase/firestore";
 import { auth, createUserAuth, db } from "../../auth/firebase";
 import { useAuth } from "../../auth/context/UserAuthContext";
@@ -20,18 +21,12 @@ import { Link, NavLink, useNavigate } from "react-router-dom";
 import { createUserWithEmailAndPassword, reload } from "firebase/auth";
 import Swal from "sweetalert2";
 
-function isValidEmail(email) {
-  return /\S+@\S+\.\S+/.test(email);
-}
-
-const AddStaffModal = ({ open, close }) => {
+const EditStaffModal = ({ open, close, data }) => {
   const { signup } = useAuth();
   const navigate = useNavigate();
   const [validation, setValidation] = useState();
-  const [validateEmail, setValidateEmail] = useState();
   const [validateSubmit, setValidateSubmit] = useState(true);
   const [confirmValidation, setConfirmValidation] = useState();
-  const [colorMSGEmail, setColorMSGEmail] = useState();
   const [colorMSG, setColorMSG] = useState();
   const [colorMSGConfirm, setColorMSGConfirm] = useState();
   const [user, setUser] = useState({
@@ -42,8 +37,6 @@ const AddStaffModal = ({ open, close }) => {
     confirmpassword: "",
     profile: "",
   });
-  let colorEmail = "";
-  let emailMSG = "";
   let errMsg = "";
   let colorMsg = "";
   let MSGconfirm = "";
@@ -101,28 +94,6 @@ const AddStaffModal = ({ open, close }) => {
     setColorMSGConfirm(colorMsgConfirm);
   }, [user.password, user.confirmpassword]);
 
-  useEffect(() => {
-    handleValidateEmail(user.email);
-  }, [user.email]);
-
-  const handleValidateEmail = (email_val) => {
-    const email = email_val;
-    if (email.length > 0) {
-      if (isValidEmail(email)) {
-        colorEmail = "green";
-        emailMSG = "Valid Email Address";
-      } else {
-        colorEmail = "red";
-        emailMSG = "Email is invalid";
-      }
-    } else {
-      emailMSG = "";
-    }
-
-    setColorMSGEmail(colorEmail);
-    setValidateEmail(emailMSG);
-  };
-
   const convertToBase64 = (file) => {
     return new Promise((resolve, reject) => {
       const fileReader = new FileReader();
@@ -135,52 +106,38 @@ const AddStaffModal = ({ open, close }) => {
       };
     });
   };
-
   const handleFileUpload = async (e) => {
     const file = e.target.files[0];
     const base64 = await convertToBase64(file);
     setUser({ ...user, profile: base64 });
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
+    close();
     if (window.confirm("Are you Sure to Add this Staff?")) {
       close();
       Swal.showLoading();
       try {
-        const signedUpUser = await createUserWithEmailAndPassword(
-          createUserAuth,
-          user.email,
-          user.password
-        );
-        const newUser = {
-          email: user.email,
-          password: user.password,
-          firstname: user.firstname,
-          lastname: user.lastname,
-          role: "Staff",
-          online: false,
-          photoURL: user.profile,
-          createdAt: serverTimestamp(),
-          updatedAt: serverTimestamp(),
-        };
-        await setDoc(doc(db, "users", signedUpUser.user.uid), newUser);
+        updateDoc(doc(db, "users", data.id), {
+          password: user.password ? user.password : data.password,
+          firstname: user.firstname ? user.firstname : data.firstname,
+          lastname: user.lastname ? user.lastname : data.lastname,
+          photoURL: user.profile ? user.profile : data.photoURL,
+        });
         Swal.fire({
           title: "Success",
-          html: "Staff Added Successfully?",
+          html: "Staff Updated Successfully?",
           icon: "success",
           timer: 1000,
         });
-        window.location.reload();
       } catch (error) {
-        alert(error);
-        window.location.reload();
+        console.log(error);
       }
     } else {
       window.location.reload();
     }
   };
-
   const handleClose = () => {
     setUser({
       ...user,
@@ -192,7 +149,7 @@ const AddStaffModal = ({ open, close }) => {
   return (
     <Dialog open={open} fullWidth maxWidth="md">
       <DialogTitle className="d-flex justify-content-between">
-        <h1> Add New Staff</h1>
+        Edit Staff
         <li className="fa fa-close cursor-pointer" onClick={handleClose}></li>
       </DialogTitle>
       <DialogContent>
@@ -207,14 +164,13 @@ const AddStaffModal = ({ open, close }) => {
                     className="form-control form-control-lg"
                     id="firstname"
                     name="firstname"
+                    placeholder={data.firstname}
                     style={{
                       borderColor: user.firstname.length != 0 ? "green" : "",
                     }}
-                    placeholder="Enter your firstname.."
                     onChange={(e) =>
                       setUser({ ...user, firstname: e.target.value })
                     }
-                    required
                   />
                 </div>
               </div>
@@ -226,14 +182,13 @@ const AddStaffModal = ({ open, close }) => {
                     className="form-control form-control-lg"
                     id="lastname"
                     name="lastname"
+                    placeholder={data.lastname}
                     style={{
                       borderColor: user.lastname.length != 0 ? "green" : "",
                     }}
-                    placeholder="Enter your lastname.."
                     onChange={(e) =>
                       setUser({ ...user, lastname: e.target.value })
                     }
-                    required
                   />
                 </div>
               </div>
@@ -245,27 +200,13 @@ const AddStaffModal = ({ open, close }) => {
                     className="form-control form-control-lg"
                     id="email"
                     name="email"
-                    style={{
-                      borderColor: colorMSGEmail,
-                    }}
-                    placeholder="Enter your email.."
+                    disabled
+                    placeholder={data.email}
                     onChange={(e) =>
                       setUser({ ...user, email: e.target.value })
                     }
-                    required
                   />
                 </div>
-                <p
-                  style={{
-                    color: colorMSGEmail,
-                    marginLeft: 30,
-                    fontSize: 14,
-                    padding: 5,
-                    fontWeight: "bold",
-                  }}
-                >
-                  {validateEmail}
-                </p>
               </div>
               <div className="form-group row">
                 <label className="ml-3 mb-3">Password</label>
@@ -275,14 +216,11 @@ const AddStaffModal = ({ open, close }) => {
                     className="form-control form-control-lg"
                     id="password"
                     name="password"
-                    style={{
-                      borderColor: colorMSG,
-                    }}
-                    placeholder="Enter your password.."
+                    placeholder="•••••••••"
+                    style={{ borderColor: colorMSG }}
                     onChange={(e) =>
                       setUser({ ...user, password: e.target.value })
                     }
-                    required
                   />
                   <p
                     style={{
@@ -305,17 +243,14 @@ const AddStaffModal = ({ open, close }) => {
                     className="form-control form-control-lg"
                     id="confirmpassword"
                     name="confirmpassword"
-                    style={{
-                      borderColor: colorMSGConfirm,
-                    }}
-                    placeholder="Enter your password.."
+                    style={{ borderColor: colorMSGConfirm }}
+                    placeholder="•••••••••"
                     onChange={(e) =>
                       setUser({
                         ...user,
                         confirmpassword: e.target.value,
                       })
                     }
-                    required
                   />
                   <p
                     style={{
@@ -334,7 +269,7 @@ const AddStaffModal = ({ open, close }) => {
                 <div>
                   <img
                     className="img-avatar w-20 h-20 mr-2 img-avatar-thumb"
-                    src={user.profile ? user.profile : Userlogo}
+                    src={user.profile ? user.profile : data.photoURL}
                   />
                 </div>
                 <div>
@@ -350,14 +285,14 @@ const AddStaffModal = ({ open, close }) => {
                   </div>
                 </div>
               </div>
+
               <div className="form-group row pt-50">
                 <div className="col-12 text-center">
                   <button
                     type="submit"
                     className="btn btn-hero btn-alt-primary min-width-175"
-                    disabled={validateSubmit ? true : false}
                   >
-                    <i className="fa fa-send mr-5"></i> Submit
+                    <i className="fa fa-send mr-5"></i> Update
                   </button>
                 </div>
               </div>
@@ -369,4 +304,4 @@ const AddStaffModal = ({ open, close }) => {
   );
 };
 
-export default AddStaffModal;
+export default EditStaffModal;
